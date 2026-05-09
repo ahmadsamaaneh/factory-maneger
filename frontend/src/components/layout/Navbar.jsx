@@ -39,7 +39,7 @@ export default function Navbar() {
             style={{ color: 'var(--text-tertiary)' }}
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-subtle)'}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            aria-label="Toggle theme"
+            aria-label="تبديل النمط"
           >
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </button>
@@ -52,7 +52,7 @@ export default function Navbar() {
             style={{ color: 'var(--text-tertiary)' }}
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-subtle)'}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            aria-label="Notifications"
+            aria-label="الإشعارات"
           >
             <Bell size={16} />
           </button>
@@ -80,7 +80,10 @@ export default function Navbar() {
             <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>{user?.name}</p>
             <p className="text-2xs" style={{ color: 'var(--text-tertiary)' }}>{user?.email}</p>
           </div>
-          <DropdownItem icon={Settings} onSelect={() => {}}>
+          <DropdownItem
+            icon={Settings}
+            onSelect={() => navigate(user?.role === 'admin' ? '/admin/settings/account' : '/settings/account')}
+          >
             {t('common.accountSettings')}
           </DropdownItem>
           <DropdownSeparator />

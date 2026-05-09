@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Plus, Eye, ChevronDown } from 'lucide-react';
+import { Plus, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DataTable from '../../design-system/components/organisms/DataTable';
 import Modal from '../../design-system/components/organisms/Modal';
 import Button from '../../design-system/components/atoms/Button';
 import { Input } from '../../design-system/components/atoms/Input';
-import Badge from '../../design-system/components/atoms/Badge';
 import { getOrders, createOrder, getOrderById, updateOrderStatus } from '../../services/salesService';
 import { getCustomers } from '../../services/salesService';
 import { getProducts } from '../../services/productService';
@@ -14,6 +13,14 @@ import { STATUS_COLORS, ORDER_STATUSES } from '../../utils/constants';
 import { useTranslation } from 'react-i18next';
 
 const emptyItem = () => ({ product_id: '', quantity: '', unit_price: '' });
+
+const ORDER_STATUS_AR = {
+  pending: 'قيد الانتظار',
+  confirmed: 'مؤكّد',
+  shipped: 'تم الشحن',
+  delivered: 'تم التسليم',
+  cancelled: 'ملغي',
+};
 
 export default function OrdersPage() {
   const { t } = useTranslation();
@@ -25,16 +32,17 @@ export default function OrdersPage() {
   const [detail,    setDetail]    = useState(null);
   const [saving,    setSaving]    = useState(false);
   const [filter,    setFilter]    = useState('');
+  const [statusSaving, setStatusSaving] = useState(null);
 
   const [form, setForm] = useState({
-    customer_id: '', discount: '', notes: '',
+    customer_id: '', discount: '', notes: '', status: 'pending',
     items: [emptyItem()],
   });
 
   useEffect(() => {
     Promise.all([
       getOrders().then(setOrders),
-      getCustomers().then(setCustomers),
+      getCustomers({ active_only: true }).then(setCustomers),
       getProducts().then(setProducts),
     ]).finally(() => setLoading(false));
   }, []);
@@ -71,38 +79,64 @@ export default function OrdersPage() {
   };
 
   const handleCreate = async () => {
-    if (!form.customer_id) return toast.error('Select a customer.');
-    if (form.items.some((it) => !it.product_id || !it.quantity)) return toast.error('Fill all order items.');
+    if (!form.customer_id) return toast.error('اختر عميلًا.');
+    if (form.items.some((it) => !it.product_id || !it.quantity)) return toast.error('أكمل جميع عناصر الطلب.');
     setSaving(true);
     try {
       await createOrder(form);
-      toast.success('Order created successfully.');
+      toast.success('تم إنشاء الطلب بنجاح.');
       setModal(false);
-      setForm({ customer_id: '', discount: '', notes: '', items: [emptyItem()] });
+      setForm({ customer_id: '', discount: '', notes: '', status: 'pending', items: [emptyItem()] });
       reload();
     } catch (e) { toast.error(errMsg(e)); }
     finally { setSaving(false); }
   };
 
-  const handleStatusChange = async (orderId, status) => {
+  const handleStatusChange = async (orderId, status, { fromTable = false } = {}) => {
+    if (fromTable) setStatusSaving(orderId);
     try {
       await updateOrderStatus(orderId, status);
-      toast.success('Order status updated.');
-      reload();
+      toast.success('تم تحديث حالة الطلب.');
+      await reload();
       if (detail?.id === orderId) {
-        setDetail((d) => d ? { ...d, status } : d);
+        setDetail((d) => (d ? { ...d, status } : d));
       }
-    } catch (e) { toast.error(errMsg(e)); }
+    } catch (e) {
+      toast.error(errMsg(e));
+    } finally {
+      if (fromTable) setStatusSaving(null);
+    }
   };
 
   const filteredOrders = filter ? orders.filter((o) => o.status === filter) : orders;
 
   const columns = [
-    { key: 'order_number', label: 'Order #',    render: (r) => <span className="font-mono text-xs font-medium">{r.order_number}</span> },
-    { key: 'customer',     label: 'Customer',   render: (r) => r.customer?.name || '—' },
-    { key: 'total_amount', label: 'Total',      render: (r) => <span className="font-semibold">{fmt.currency(r.total_amount)}</span> },
-    { key: 'status',       label: 'Status',     render: (r) => <Badge label={r.status} className={STATUS_COLORS[r.status]} /> },
-    { key: 'created_at',   label: 'Date',       render: (r) => fmt.date(r.created_at) },
+    { key: 'order_number', label: 'رقم الطلب',    render: (r) => <span className="font-mono text-xs font-medium">{r.order_number}</span> },
+    { key: 'customer',     label: 'العميل',   render: (r) => r.customer?.name || '—' },
+    { key: 'total_amount', label: 'الإجمالي',      render: (r) => <span className="font-semibold">{fmt.currency(r.total_amount)}</span> },
+    {
+      key: 'status',
+      label: 'الحالة',
+      width: 168,
+      render: (r) => (
+        <select
+          className="ds-input h-9 text-sm min-w-[9.5rem]"
+          value={r.status}
+          disabled={statusSaving === r.id}
+          onClick={(e) => e.stopPropagation()}
+          onChange={(e) => {
+            const next = e.target.value;
+            if (next === r.status) return;
+            handleStatusChange(r.id, next, { fromTable: true });
+          }}
+        >
+          {ORDER_STATUSES.map((s) => (
+            <option key={s} value={s}>{ORDER_STATUS_AR[s] || s}</option>
+          ))}
+        </select>
+      ),
+    },
+    { key: 'created_at',   label: 'التاريخ',       render: (r) => fmt.date(r.created_at) },
     { key: 'actions',      label: '', width: 60, render: (r) => (
       <Button variant="ghost" size="sm" icon={Eye} onClick={() => openDetail(r)} />
     )},
@@ -115,7 +149,7 @@ export default function OrdersPage() {
           <h1>{t('pages.sales.orders')}</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{t('pages.sales.title')}</p>
         </div>
-        <Button icon={Plus} onClick={() => setModal(true)}>New Order</Button>
+        <Button icon={Plus} onClick={() => setModal(true)}>طلب جديد</Button>
       </div>
 
       {/* Status filter tabs */}
@@ -131,41 +165,53 @@ export default function OrdersPage() {
             }`}
             style={filter !== s ? { backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-default)', color: 'var(--text-secondary)' } : {}}
           >
-            {s ? s.charAt(0).toUpperCase() + s.slice(1) : 'All'}
+            {s ? s.charAt(0).toUpperCase() + s.slice(1) : 'الكل'}
           </button>
         ))}
       </div>
 
-      <DataTable columns={columns} data={filteredOrders} loading={loading} emptyMessage="No orders found." />
+      <DataTable columns={columns} data={filteredOrders} loading={loading} emptyMessage="لا توجد طلبات." />
 
       {/* Create Order Modal */}
-      <Modal open={modal} onClose={() => setModal(false)} title="New Sales Order" size="lg">
+      <Modal open={modal} onClose={() => setModal(false)} title="طلب مبيعات جديد" size="lg">
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">Customer *</label>
+              <label className="text-sm font-medium text-gray-700">العميل *</label>
               <select
                 value={form.customer_id}
                 onChange={(e) => setForm((f) => ({ ...f, customer_id: e.target.value }))}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                <option value="">Select customer…</option>
+                <option value="">اختر عميلًا…</option>
                 {customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <Input
-              label="Discount ($)"
+              label="الخصم"
               type="number" min="0" step="0.01" placeholder="0.00"
               value={form.discount}
               onChange={(e) => setForm((f) => ({ ...f, discount: e.target.value }))}
             />
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">حالة الطلب</label>
+              <select
+                value={form.status}
+                onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                {ORDER_STATUSES.map((s) => (
+                  <option key={s} value={s}>{ORDER_STATUS_AR[s] || s}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Order Items */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-semibold text-gray-700">Order Items *</p>
-              <Button variant="ghost" size="sm" icon={Plus} onClick={addItem}>Add item</Button>
+              <p className="text-sm font-semibold text-gray-700">عناصر الطلب *</p>
+              <Button variant="ghost" size="sm" icon={Plus} onClick={addItem}>إضافة عنصر</Button>
             </div>
             <div className="space-y-2">
               {form.items.map((it, i) => (
@@ -175,21 +221,21 @@ export default function OrdersPage() {
                     onChange={(e) => onProductChange(i, e.target.value)}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
-                    <option value="">Select product…</option>
+                    <option value="">اختر منتجًا…</option>
                     {products.map((p) => (
                       <option key={p.id} value={p.id}>
-                        {p.name} (stock: {fmt.number(p.stock_quantity, 0)})
+                        {p.name} (المخزون: {fmt.number(p.stock_quantity, 0)})
                       </option>
                     ))}
                   </select>
                   <input
-                    type="number" min="0.001" step="0.001" placeholder="Qty"
+                    type="number" min="0.001" step="0.001" placeholder="الكمية"
                     value={it.quantity}
                     onChange={(e) => setItem(i, 'quantity', e.target.value)}
                     className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                   <input
-                    type="number" min="0" step="0.01" placeholder="Price"
+                    type="number" min="0" step="0.01" placeholder="السعر"
                     value={it.unit_price}
                     onChange={(e) => setItem(i, 'unit_price', e.target.value)}
                     className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -201,8 +247,8 @@ export default function OrdersPage() {
           </div>
 
           <Input
-            label="Notes (optional)"
-            placeholder="Order notes or delivery instructions"
+            label="ملاحظات (اختياري)"
+            placeholder="ملاحظات الطلب أو تعليمات التسليم"
             value={form.notes}
             onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
           />
@@ -210,28 +256,28 @@ export default function OrdersPage() {
           {/* Order Summary */}
           <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
             <div className="flex justify-between text-gray-600">
-              <span>Subtotal</span>
+              <span>المجموع الفرعي</span>
               <span>{fmt.currency(form.items.reduce((s, it) => s + parseFloat(it.quantity || 0) * parseFloat(it.unit_price || 0), 0))}</span>
             </div>
             <div className="flex justify-between text-gray-600">
-              <span>Discount</span>
+              <span>الخصم</span>
               <span className="text-red-500">- {fmt.currency(form.discount || 0)}</span>
             </div>
             <div className="flex justify-between font-semibold text-gray-900 border-t border-gray-200 pt-2">
-              <span>Total</span>
+              <span>الإجمالي</span>
               <span className="text-indigo-600 text-base">{fmt.currency(orderTotal())}</span>
             </div>
           </div>
 
           <div className="flex gap-3 pt-2">
-            <Button variant="secondary" className="flex-1" onClick={() => setModal(false)}>Cancel</Button>
-            <Button className="flex-1" loading={saving} onClick={handleCreate}>Confirm Order</Button>
+            <Button variant="secondary" className="flex-1" onClick={() => setModal(false)}>إلغاء</Button>
+            <Button className="flex-1" loading={saving} onClick={handleCreate}>تأكيد الطلب</Button>
           </div>
         </div>
       </Modal>
 
       {/* Order Detail Modal */}
-      <Modal open={!!detail} onClose={() => setDetail(null)} title={`Order: ${detail?.order_number}`} size="lg">
+      <Modal open={!!detail} onClose={() => setDetail(null)} title={`الطلب: ${detail?.order_number}`} size="lg">
         {detail && (
           <div className="space-y-5 text-sm">
             {/* Header info */}

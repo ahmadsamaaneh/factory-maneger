@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const bcrypt = require('bcryptjs');
 
 // 'admin' intentionally excluded — admin is a system-level role authenticated via env vars, not stored in DB
-const ROLES = ['factory_owner', 'inventory_manager', 'production_manager', 'sales_manager'];
+const ROLES = ['factory_owner', 'hr_manager', 'inventory_manager', 'production_manager', 'sales_manager'];
 
 module.exports = (sequelize) => {
   const User = sequelize.define(

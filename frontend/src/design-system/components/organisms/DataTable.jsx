@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { ChevronUp, ChevronDown, ChevronsUpDown, Search, Inbox } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import Spinner from '../atoms/Spinner';
 import { cn } from '../../utils/cn';
 
@@ -36,6 +37,7 @@ export default function DataTable({
   compact,
   className,
 }) {
+  const { t } = useTranslation();
   const [search,   setSearch]   = useState('');
   const [sortKey,  setSortKey]  = useState(null);
   const [sortDir,  setSortDir]  = useState('asc');
@@ -82,7 +84,7 @@ export default function DataTable({
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder={searchPlaceholder}
+            placeholder={searchPlaceholder || t('common.searchPlaceholder')}
             className="ds-input pl-8 h-8 text-xs"
           />
         </div>
@@ -147,11 +149,13 @@ export default function DataTable({
         {!loading && processed.length > 0 && (
           <div className="px-4 py-2.5 border-t text-xs flex items-center justify-between" style={{ borderColor: 'var(--border-default)', color: 'var(--text-tertiary)' }}>
             <span>
-              {search ? `${processed.length} of ${data.length}` : data.length} record{data.length !== 1 ? 's' : ''}
+              {search
+                ? t('common.filteredRecords', { filtered: processed.length, total: data.length })
+                : t('common.recordsCount', { count: data.length })}
             </span>
             {search && (
               <button onClick={() => setSearch('')} className="hover:underline text-primary-500">
-                Clear search
+                {t('common.clearSearch')}
               </button>
             )}
           </div>

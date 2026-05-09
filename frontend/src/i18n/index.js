@@ -15,7 +15,7 @@ const initialLang = (() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved && SUPPORTED_LANGS.some((l) => l.code === saved)) return saved;
   } catch (_) { /* ignore */ }
-  return 'en';
+  return 'ar';
 })();
 
 i18n
@@ -26,7 +26,7 @@ i18n
       ar: { translation: ar },
     },
     lng: initialLang,
-    fallbackLng: 'en',
+    fallbackLng: 'ar',
     interpolation: { escapeValue: false },
     returnNull: false,
   });

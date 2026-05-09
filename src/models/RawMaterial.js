@@ -38,6 +38,14 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(100),
         allowNull: true,
       },
+      supplier: {
+        type: DataTypes.STRING(200),
+        allowNull: true,
+      },
+      notes: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
       reorder_level: {
         type: DataTypes.DECIMAL(12, 4),
         allowNull: true,

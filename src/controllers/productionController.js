@@ -56,7 +56,7 @@ async function runBatch(req, res, next) {
 
 async function listBatches(req, res, next) {
   try {
-    const batches = await productionService.listBatches(req.factoryId);
+    const batches = await productionService.listBatches(req.query, req.factoryId);
     res.json({ success: true, data: batches });
   } catch (err) {
     next(err);
@@ -72,4 +72,13 @@ async function getBatchById(req, res, next) {
   }
 }
 
-module.exports = { createRecipe, listRecipes, getRecipeById, updateRecipe, deleteRecipe, runBatch, listBatches, getBatchById };
+async function updateBatch(req, res, next) {
+  try {
+    const batch = await productionService.updateBatch(req.params.id, req.body, req.factoryId);
+    res.json({ success: true, data: batch });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { createRecipe, listRecipes, getRecipeById, updateRecipe, deleteRecipe, runBatch, listBatches, getBatchById, updateBatch };

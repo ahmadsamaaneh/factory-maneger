@@ -27,9 +27,13 @@ export default function ProductsPage() {
 
   const load = async () => {
     setLoading(true);
-    try { setProducts(await getProducts({ search })); }
-    catch (e) { toast.error(errMsg(e)); }
-    finally { setLoading(false); }
+    try {
+      setProducts(await getProducts({ search }));
+    } catch (e) {
+      toast.error(errMsg(e), { id: 'products-load' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, [search]);
@@ -39,11 +43,11 @@ export default function ProductsPage() {
   const closeModal = () => { setModal(null); setSelected(null); };
 
   const handleSave = async () => {
-    if (!form.name || !form.selling_price) return toast.error('Name and selling price are required.');
+    if (!form.name || !form.selling_price) return toast.error('الاسم وسعر البيع مطلوبان.');
     setSaving(true);
     try {
-      if (selected) { await updateProduct(selected.id, form); toast.success('Product updated.'); }
-      else { await createProduct(form); toast.success('Product created.'); }
+      if (selected) { await updateProduct(selected.id, form); toast.success('تم تحديث المنتج.'); }
+      else { await createProduct(form); toast.success('تم إنشاء المنتج.'); }
       closeModal(); load();
     } catch (e) { toast.error(errMsg(e)); }
     finally { setSaving(false); }
@@ -51,7 +55,7 @@ export default function ProductsPage() {
 
   const handleDelete = async () => {
     setDeleting(true);
-    try { await deleteProduct(confirm.id); toast.success('Product deleted.'); setConfirm(null); load(); }
+    try { await deleteProduct(confirm.id); toast.success('تم حذف المنتج.'); setConfirm(null); load(); }
     catch (e) { toast.error(errMsg(e)); }
     finally { setDeleting(false); }
   };
@@ -65,18 +69,18 @@ export default function ProductsPage() {
   };
 
   const columns = [
-    { key: 'name',          label: 'Product' },
-    { key: 'sku',           label: 'SKU',          render: (r) => <span className="font-mono text-xs" style={{ color: 'var(--text-tertiary)' }}>{r.sku || '—'}</span> },
-    { key: 'cost',          label: 'Cost',         sortable: true, sortValue: (r) => parseFloat(r.cost), render: (r) => fmt.currency(r.cost) },
-    { key: 'selling_price', label: 'Sell Price',   sortable: true, sortValue: (r) => parseFloat(r.selling_price), render: (r) => <span className="font-semibold text-success-700 dark:text-success-400">{fmt.currency(r.selling_price)}</span> },
-    { key: 'margin',        label: 'Margin',       render: (r) => (
+    { key: 'name',          label: 'المنتج' },
+    { key: 'sku',           label: 'الرمز',          render: (r) => <span className="font-mono text-xs" style={{ color: 'var(--text-tertiary)' }}>{r.sku || '—'}</span> },
+    { key: 'cost',          label: 'التكلفة',         sortable: true, sortValue: (r) => parseFloat(r.cost), render: (r) => fmt.currency(r.cost) },
+    { key: 'selling_price', label: 'سعر البيع',   sortable: true, sortValue: (r) => parseFloat(r.selling_price), render: (r) => <span className="font-semibold text-success-700 dark:text-success-400">{fmt.currency(r.selling_price)}</span> },
+    { key: 'margin',        label: 'الهامش',       render: (r) => (
       <span className="flex items-center gap-1 text-primary-600 dark:text-primary-400 font-semibold text-xs">
         <TrendingUp size={12} />{margin(r)}
       </span>
     )},
-    { key: 'stock_quantity',label: 'Stock',        sortable: true, sortValue: (r) => parseFloat(r.stock_quantity), render: (r) => (
+    { key: 'stock_quantity',label: 'المخزون',        sortable: true, sortValue: (r) => parseFloat(r.stock_quantity), render: (r) => (
       <Badge
-        label={`${fmt.number(r.stock_quantity, 0)} units`}
+        label={`${fmt.number(r.stock_quantity, 0)} وحدة`}
         variant={parseFloat(r.stock_quantity) === 0 ? 'danger' : 'neutral'}
         size="sm"
       />
@@ -103,37 +107,37 @@ export default function ProductsPage() {
         columns={columns}
         data={products}
         loading={loading}
-        emptyMessage="No products yet. Add your first product."
+        emptyMessage="لا توجد منتجات بعد. أضف أول منتج."
         searchable
-        searchPlaceholder="Search products or SKU…"
+        searchPlaceholder="ابحث بالمنتج أو الرمز…"
         striped
       />
 
-      <Modal open={modal === 'form'} onClose={closeModal} title={selected ? 'Edit Product' : 'New Product'}>
+      <Modal open={modal === 'form'} onClose={closeModal} title={selected ? 'تعديل المنتج' : 'منتج جديد'}>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Product Name *" placeholder="e.g. Steel Beam 2m" value={form.name} onChange={field('name')} />
-            <Input label="SKU" placeholder="e.g. SB-2M-001" value={form.sku} onChange={field('sku')} />
+            <Input label="اسم المنتج *" placeholder="مثال: منتج 2 متر" value={form.name} onChange={field('name')} />
+            <Input label="الرمز" placeholder="مثال: PR-001" value={form.sku} onChange={field('sku')} />
           </div>
-          <Textarea label="Description" placeholder="Optional description" value={form.description} onChange={field('description')} />
+          <Textarea label="الوصف" placeholder="وصف اختياري" value={form.description} onChange={field('description')} />
           <div className="grid grid-cols-3 gap-4">
-            <Input label="Cost" type="number" min="0" step="0.01" placeholder="0.00" value={form.cost} onChange={field('cost')} />
-            <Input label="Selling Price *" type="number" min="0" step="0.01" placeholder="0.00" value={form.selling_price} onChange={field('selling_price')} />
-            <Input label="Stock Qty" type="number" min="0" placeholder="0" value={form.stock_quantity} onChange={field('stock_quantity')} />
+            <Input label="التكلفة" type="number" min="0" step="0.01" placeholder="0.00" value={form.cost} onChange={field('cost')} />
+            <Input label="سعر البيع *" type="number" min="0" step="0.01" placeholder="0.00" value={form.selling_price} onChange={field('selling_price')} />
+            <Input label="كمية المخزون" type="number" min="0" placeholder="0" value={form.stock_quantity} onChange={field('stock_quantity')} />
           </div>
           {form.cost && form.selling_price && (
             <div className="bg-primary-50 dark:bg-primary-950/40 rounded-lg px-4 py-3 text-sm text-primary-700 dark:text-primary-300">
-              Margin: <strong>{margin(form)}</strong> &nbsp;|&nbsp; Profit/unit: <strong>{fmt.currency(parseFloat(form.selling_price) - parseFloat(form.cost))}</strong>
+              الهامش: <strong>{margin(form)}</strong> &nbsp;|&nbsp; الربح/وحدة: <strong>{fmt.currency(parseFloat(form.selling_price) - parseFloat(form.cost))}</strong>
             </div>
           )}
           <div className="flex gap-3 pt-2">
-            <Button variant="secondary" className="flex-1" onClick={closeModal}>Cancel</Button>
-            <Button className="flex-1" loading={saving} onClick={handleSave}>{selected ? 'Save Changes' : 'Create Product'}</Button>
+            <Button variant="secondary" className="flex-1" onClick={closeModal}>إلغاء</Button>
+            <Button className="flex-1" loading={saving} onClick={handleSave}>{selected ? 'حفظ التغييرات' : 'إنشاء المنتج'}</Button>
           </div>
         </div>
       </Modal>
 
-      <ConfirmModal open={!!confirm} onClose={() => setConfirm(null)} onConfirm={handleDelete} loading={deleting} title="Delete Product" message={`Delete "${confirm?.name}"? This action cannot be undone.`} />
+      <ConfirmModal open={!!confirm} onClose={() => setConfirm(null)} onConfirm={handleDelete} loading={deleting} title="حذف المنتج" message={`حذف "${confirm?.name}"؟ لا يمكن التراجع عن هذا الإجراء.`} />
     </div>
   );
 }

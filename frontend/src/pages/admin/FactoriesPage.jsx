@@ -21,10 +21,10 @@ import { errMsg } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
 
 const STATUS_BADGE = {
-  active:    { variant: 'success',  label: 'Active' },
-  trial:     { variant: 'info',     label: 'Trial' },
-  expired:   { variant: 'danger',   label: 'Expired' },
-  suspended: { variant: 'warning',  label: 'Suspended' },
+  active:    { variant: 'success',  label: 'نشط' },
+  trial:     { variant: 'info',     label: 'تجريبي' },
+  expired:   { variant: 'danger',   label: 'منتهي' },
+  suspended: { variant: 'warning',  label: 'موقوف' },
 };
 
 const emptyForm = () => ({
@@ -60,12 +60,12 @@ export default function FactoriesPage() {
 
   const handleCreate = async () => {
     if (!form.name || !form.owner_name || !form.owner_email || !form.owner_password) {
-      return toast.error('All fields are required.');
+      return toast.error('كل الحقول مطلوبة.');
     }
     try {
       setSaving(true);
       await createFactory(form);
-      toast.success('Factory created successfully.');
+      toast.success('تم إنشاء المصنع بنجاح.');
       setCreateModal(false);
       setForm(emptyForm());
       load();
@@ -77,7 +77,7 @@ export default function FactoriesPage() {
     try {
       setSaving(true);
       await updateFactory(editModal.id, editForm);
-      toast.success('Factory updated.');
+      toast.success('تم تحديث المصنع.');
       setEditModal(null);
       load();
     } catch (e) { toast.error(errMsg(e)); }
@@ -88,7 +88,7 @@ export default function FactoriesPage() {
     try {
       setDeleting(true);
       await deleteFactory(confirm.id);
-      toast.success('Factory deactivated.');
+      toast.success('تم تعطيل المصنع.');
       setConfirm(null);
       load();
     } catch (e) { toast.error(errMsg(e)); }
@@ -215,10 +215,10 @@ export default function FactoriesPage() {
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Total Factories"  value={stats.total}     icon={Building2}    colorClass="text-primary-600 bg-primary-50 dark:bg-primary-900/30" />
-          <StatCard label="Active"           value={stats.active}    icon={CheckCircle2} colorClass="text-success-600 bg-success-50 dark:bg-success-900/30" />
-          <StatCard label="Expired"          value={stats.expired}   icon={XCircle}      colorClass="text-danger-600 bg-danger-50 dark:bg-danger-900/30" />
-          <StatCard label="Trial"            value={stats.trial}     icon={Clock}        colorClass="text-warning-600 bg-warning-50 dark:bg-warning-900/30" />
+          <StatCard label="إجمالي المصانع"  value={stats.total}     icon={Building2}    colorClass="text-primary-600 bg-primary-50 dark:bg-primary-900/30" />
+          <StatCard label="نشط"           value={stats.active}    icon={CheckCircle2} colorClass="text-success-600 bg-success-50 dark:bg-success-900/30" />
+          <StatCard label="منتهي"          value={stats.expired}   icon={XCircle}      colorClass="text-danger-600 bg-danger-50 dark:bg-danger-900/30" />
+          <StatCard label="تجريبي"            value={stats.trial}     icon={Clock}        colorClass="text-warning-600 bg-warning-50 dark:bg-warning-900/30" />
         </div>
       )}
 
@@ -228,31 +228,31 @@ export default function FactoriesPage() {
         data={factories}
         loading={loading}
         striped
-        emptyMessage="No factories yet. Create the first one."
+        emptyMessage="لا توجد مصانع بعد. أنشئ أول مصنع."
       />
 
       {/* ── Create Factory Modal ── */}
-      <Modal open={createModal} onClose={() => setCreateModal(false)} title="New Factory" size="md">
+      <Modal open={createModal} onClose={() => setCreateModal(false)} title="مصنع جديد" size="md">
         <div className="space-y-4">
-          <p className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>Factory Details</p>
+          <p className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>تفاصيل المصنع</p>
           <Input
-            label="Factory Name *"
-            placeholder="e.g. Acme Manufacturing"
+            label="اسم المصنع *"
+            placeholder="مثال: مصنع..."
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
           />
 
           <div className="border-t pt-4" style={{ borderColor: 'var(--border-subtle)' }}>
-            <p className="text-sm font-semibold mb-3" style={{ color: 'var(--text-secondary)' }}>Owner Account</p>
+            <p className="text-sm font-semibold mb-3" style={{ color: 'var(--text-secondary)' }}>حساب المالك</p>
             <div className="grid grid-cols-2 gap-3">
               <Input
-                label="Owner Name *"
-                placeholder="Full name"
+                label="اسم المالك *"
+                placeholder="الاسم الكامل"
                 value={form.owner_name}
                 onChange={(e) => setForm((f) => ({ ...f, owner_name: e.target.value }))}
               />
               <Input
-                label="Owner Email *"
+                label="بريد المالك *"
                 type="email"
                 placeholder="owner@company.com"
                 value={form.owner_email}
@@ -261,9 +261,9 @@ export default function FactoriesPage() {
             </div>
             <div className="mt-3">
               <Input
-                label="Owner Password *"
+                label="كلمة مرور المالك *"
                 type="password"
-                placeholder="Min. 8 characters"
+                placeholder="8 أحرف على الأقل"
                 value={form.owner_password}
                 onChange={(e) => setForm((f) => ({ ...f, owner_password: e.target.value }))}
               />
@@ -271,23 +271,23 @@ export default function FactoriesPage() {
           </div>
 
           <div className="border-t pt-4" style={{ borderColor: 'var(--border-subtle)' }}>
-            <p className="text-sm font-semibold mb-3" style={{ color: 'var(--text-secondary)' }}>Subscription & Limits</p>
+            <p className="text-sm font-semibold mb-3" style={{ color: 'var(--text-secondary)' }}>الاشتراك والحدود</p>
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>Status</label>
+                <label className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>الحالة</label>
                 <select
                   value={form.subscription_status}
                   onChange={(e) => setForm((f) => ({ ...f, subscription_status: e.target.value }))}
                   className="ds-input h-9 text-sm"
                 >
-                  <option value="trial">Trial</option>
-                  <option value="active">Active</option>
-                  <option value="expired">Expired</option>
-                  <option value="suspended">Suspended</option>
+                  <option value="trial">تجريبي</option>
+                  <option value="active">نشط</option>
+                  <option value="expired">منتهي</option>
+                  <option value="suspended">موقوف</option>
                 </select>
               </div>
               <Input
-                label="Expiry Date"
+                label="تاريخ الانتهاء"
                 type="date"
                 value={form.subscription_end_date}
                 onChange={(e) => setForm((f) => ({ ...f, subscription_end_date: e.target.value }))}
@@ -295,7 +295,7 @@ export default function FactoriesPage() {
             </div>
             <div className="mt-3">
               <Input
-                label="User Limit (email_limit)"
+                label="حد المستخدمين"
                 type="number"
                 min="1"
                 max="500"
@@ -307,8 +307,8 @@ export default function FactoriesPage() {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <Button variant="secondary" className="flex-1" onClick={() => setCreateModal(false)}>Cancel</Button>
-            <Button className="flex-1" loading={saving} onClick={handleCreate}>Create Factory</Button>
+            <Button variant="secondary" className="flex-1" onClick={() => setCreateModal(false)}>إلغاء</Button>
+            <Button className="flex-1" loading={saving} onClick={handleCreate}>إنشاء المصنع</Button>
           </div>
         </div>
       </Modal>

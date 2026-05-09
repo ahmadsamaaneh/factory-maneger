@@ -16,18 +16,18 @@ import { getFactory, getFactoryUsers, updateFactory } from '../../services/facto
 import { fmt, errMsg } from '../../utils/formatters';
 
 const STATUS_META = {
-  active:    { variant: 'success', label: 'Active',    icon: CheckCircle2 },
-  trial:     { variant: 'info',    label: 'Trial',     icon: Clock },
-  expired:   { variant: 'danger',  label: 'Expired',   icon: XCircle },
-  suspended: { variant: 'warning', label: 'Suspended', icon: AlertTriangle },
+  active:    { variant: 'success', label: 'نشط',    icon: CheckCircle2 },
+  trial:     { variant: 'info',    label: 'تجريبي',     icon: Clock },
+  expired:   { variant: 'danger',  label: 'منتهي',   icon: XCircle },
+  suspended: { variant: 'warning', label: 'موقوف', icon: AlertTriangle },
 };
 
 const ROLE_LABELS = {
-  factory_owner:      'Owner',
-  inventory_manager:  'Inventory',
-  production_manager: 'Production',
-  sales_manager:      'Sales',
-  admin:              'Admin',
+  factory_owner:      'مالك',
+  inventory_manager:  'مخزون',
+  production_manager: 'إنتاج',
+  sales_manager:      'مبيعات',
+  admin:              'مسؤول',
 };
 
 export default function FactoryDetailPage() {
@@ -65,7 +65,7 @@ export default function FactoryDetailPage() {
     try {
       setSaving(true);
       await updateFactory(id, form);
-      toast.success('Factory updated.');
+      toast.success('تم تحديث المصنع.');
       setEditModal(false);
       load();
     } catch (e) { toast.error(errMsg(e)); }
@@ -74,7 +74,7 @@ export default function FactoryDetailPage() {
 
   const userColumns = [
     {
-      key: 'name', label: 'Name', sortable: true,
+      key: 'name', label: 'الاسم', sortable: true,
       render: (r) => (
         <div className="flex items-center gap-2.5">
           {r.role === 'factory_owner' && (
@@ -88,7 +88,7 @@ export default function FactoryDetailPage() {
       ),
     },
     {
-      key: 'role', label: 'Role',
+      key: 'role', label: 'الدور',
       render: (r) => (
         <Badge
           label={ROLE_LABELS[r.role] || r.role}
@@ -98,10 +98,10 @@ export default function FactoryDetailPage() {
       ),
     },
     {
-      key: 'is_active', label: 'Status',
+      key: 'is_active', label: 'الحالة',
       render: (r) => (
         <Badge
-          label={r.is_active ? 'Active' : 'Inactive'}
+          label={r.is_active ? 'نشط' : 'غير نشط'}
           variant={r.is_active ? 'success' : 'neutral'}
           dot
           size="sm"
@@ -109,7 +109,7 @@ export default function FactoryDetailPage() {
       ),
     },
     {
-      key: 'created_at', label: 'Joined', sortable: true,
+      key: 'created_at', label: 'تاريخ الانضمام', sortable: true,
       render: (r) => (
         <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
           {fmt.date(r.created_at)}
@@ -130,7 +130,7 @@ export default function FactoryDetailPage() {
       <div className="page-header">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" icon={ArrowLeft} onClick={() => navigate('/admin/factories')}>
-            Back
+            رجوع
           </Button>
           <div>
             <h1 className="flex items-center gap-2">
@@ -138,13 +138,13 @@ export default function FactoryDetailPage() {
               {factory.name}
             </h1>
             <p className="text-sm mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
-              Factory ID: {factory.id}
+              معرف المصنع: {factory.id}
             </p>
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" icon={RefreshCw} onClick={load}>Refresh</Button>
-          <Button onClick={() => setEditModal(true)}>Manage Subscription</Button>
+          <Button variant="outline" size="sm" icon={RefreshCw} onClick={load}>تحديث</Button>
+          <Button onClick={() => setEditModal(true)}>إدارة الاشتراك</Button>
         </div>
       </div>
 

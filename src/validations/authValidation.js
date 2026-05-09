@@ -12,4 +12,12 @@ const changePasswordRules = [
     .withMessage('New password must be at least 8 characters.'),
 ];
 
-module.exports = { loginRules, changePasswordRules };
+const updateProfileRules = [
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required.'),
+];
+
+const updateMyFactoryRules = [
+  body('name').trim().notEmpty().withMessage('Factory name is required.').isLength({ max: 200 }),
+];
+
+module.exports = { loginRules, changePasswordRules, updateProfileRules, updateMyFactoryRules };

@@ -16,10 +16,10 @@ import { errMsg, fmt } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
 
 const ROLE_LABELS = {
-  factory_owner:      { label: 'Owner',      variant: 'warning' },
-  inventory_manager:  { label: 'Inventory',  variant: 'info' },
-  production_manager: { label: 'Production', variant: 'neutral' },
-  sales_manager:      { label: 'Sales',      variant: 'success' },
+  factory_owner:      { label: 'مالك',      variant: 'warning' },
+  inventory_manager:  { label: 'مخزون',  variant: 'info' },
+  production_manager: { label: 'إنتاج', variant: 'neutral' },
+  sales_manager:      { label: 'مبيعات',      variant: 'success' },
 };
 
 export default function AdminUsersPage() {
@@ -57,7 +57,7 @@ export default function AdminUsersPage() {
     try {
       setToggling(true);
       await toggleUserStatus(toggleTarget.id);
-      toast.success(`User ${toggleTarget.is_active ? 'disabled' : 'enabled'} successfully.`);
+      toast.success(`تم ${toggleTarget.is_active ? 'تعطيل' : 'تفعيل'} المستخدم بنجاح.`);
       setToggleTarget(null);
       load();
     } catch (e) { toast.error(errMsg(e)); }
@@ -68,7 +68,7 @@ export default function AdminUsersPage() {
     try {
       setResetting(true);
       await resetUserPassword(resetTarget.id, newPwd);
-      toast.success(`Password reset for ${resetTarget.email}.`);
+      toast.success(`تمت إعادة تعيين كلمة المرور لـ ${resetTarget.email}.`);
       setResetTarget(null);
       setNewPwd('');
     } catch (e) { toast.error(errMsg(e)); }
@@ -77,7 +77,7 @@ export default function AdminUsersPage() {
 
   const columns = [
     {
-      key: 'name', label: 'User', sortable: true,
+      key: 'name', label: 'المستخدم', sortable: true,
       render: (r) => (
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
@@ -92,7 +92,7 @@ export default function AdminUsersPage() {
       ),
     },
     {
-      key: 'factory', label: 'Factory',
+      key: 'factory', label: 'المصنع',
       render: (r) => r.factory ? (
         <div className="flex items-center gap-1.5 text-sm" style={{ color: 'var(--text-secondary)' }}>
           <Building2 size={13} />
@@ -101,7 +101,7 @@ export default function AdminUsersPage() {
       ) : <span style={{ color: 'var(--text-tertiary)' }}>—</span>,
     },
     {
-      key: 'role', label: 'Role',
+      key: 'role', label: 'الدور',
       render: (r) => {
         const meta = ROLE_LABELS[r.role] || { label: r.role, variant: 'neutral' };
         return (
@@ -113,10 +113,10 @@ export default function AdminUsersPage() {
       },
     },
     {
-      key: 'is_active', label: 'Status',
+      key: 'is_active', label: 'الحالة',
       render: (r) => (
         <Badge
-          label={r.is_active ? 'Active' : 'Disabled'}
+          label={r.is_active ? 'نشط' : 'معطل'}
           variant={r.is_active ? 'success' : 'danger'}
           dot
           size="sm"
@@ -124,13 +124,13 @@ export default function AdminUsersPage() {
       ),
     },
     {
-      key: 'last_login', label: 'Last Login', sortable: true,
+      key: 'last_login', label: 'آخر تسجيل دخول', sortable: true,
       render: (r) => r.last_login
         ? <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{fmt.dateTime(r.last_login)}</span>
-        : <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Never</span>,
+        : <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>أبدًا</span>,
     },
     {
-      key: 'created_at', label: 'Joined', sortable: true,
+      key: 'created_at', label: 'تاريخ الانضمام', sortable: true,
       render: (r) => (
         <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{fmt.date(r.created_at)}</span>
       ),
@@ -184,9 +184,9 @@ export default function AdminUsersPage() {
       {/* Quick stats */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Total',    value: users.length,  color: 'text-primary-600 bg-primary-50 dark:bg-primary-900/30' },
-          { label: 'Active',   value: activeCount,   color: 'text-success-600 bg-success-50 dark:bg-success-900/30' },
-          { label: 'Disabled', value: disabledCount, color: 'text-danger-600 bg-danger-50 dark:bg-danger-900/30' },
+          { label: 'الإجمالي',    value: users.length,  color: 'text-primary-600 bg-primary-50 dark:bg-primary-900/30' },
+          { label: 'النشط',   value: activeCount,   color: 'text-success-600 bg-success-50 dark:bg-success-900/30' },
+          { label: 'المعطل', value: disabledCount, color: 'text-danger-600 bg-danger-50 dark:bg-danger-900/30' },
         ].map((s) => (
           <div key={s.label} className={`card p-4 flex items-center gap-3 ${s.color}`}>
             <Users size={18} />
@@ -205,7 +205,7 @@ export default function AdminUsersPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name or email…"
+            placeholder="ابحث بالاسم أو البريد الإلكتروني…"
             className="ds-input pl-9 h-9 text-sm w-full"
           />
         </div>
@@ -214,9 +214,9 @@ export default function AdminUsersPage() {
           onChange={(e) => setStatus(e.target.value)}
           className="ds-input h-9 text-sm w-full sm:w-40"
         >
-          <option value="">All statuses</option>
-          <option value="active">Active</option>
-          <option value="disabled">Disabled</option>
+          <option value="">كل الحالات</option>
+          <option value="active">نشط</option>
+          <option value="disabled">معطل</option>
         </select>
       </div>
 
@@ -230,7 +230,7 @@ export default function AdminUsersPage() {
               data={users}
               loading={loading}
               striped
-              emptyMessage="No users found."
+              emptyMessage="لا يوجد مستخدمون."
             />
           )
         }
@@ -240,13 +240,13 @@ export default function AdminUsersPage() {
       {toggleTarget && (
         <ConfirmModal
           open
-          title={toggleTarget.is_active ? 'Disable User?' : 'Enable User?'}
+          title={toggleTarget.is_active ? 'تعطيل المستخدم؟' : 'تفعيل المستخدم؟'}
           message={
             toggleTarget.is_active
-              ? `${toggleTarget.name} will be disabled and cannot log in until re-enabled.`
-              : `${toggleTarget.name} will be re-enabled and can log in again.`
+              ? `${toggleTarget.name} سيتم تعطيله ولن يستطيع تسجيل الدخول حتى إعادة تفعيله.`
+              : `${toggleTarget.name} سيتم تفعيله ويمكنه تسجيل الدخول مجددًا.`
           }
-          confirmLabel={toggleTarget.is_active ? 'Disable' : 'Enable'}
+          confirmLabel={toggleTarget.is_active ? 'تعطيل' : 'تفعيل'}
           variant={toggleTarget.is_active ? 'danger' : 'primary'}
           loading={toggling}
           onConfirm={handleToggle}
@@ -259,19 +259,19 @@ export default function AdminUsersPage() {
         <Modal
           open
           onClose={() => setResetTarget(null)}
-          title={`Reset Password — ${resetTarget.name}`}
+          title={`إعادة تعيين كلمة المرور — ${resetTarget.name}`}
           size="sm"
         >
           <div className="space-y-4">
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              Set a new password for <strong>{resetTarget.email}</strong>.
-              The user will need to use this password on their next login.
+              تعيين كلمة مرور جديدة للمستخدم <strong>{resetTarget.email}</strong>.
+              سيحتاج المستخدم لاستخدامها في تسجيل الدخول القادم.
             </p>
             <div className="relative">
               <Input
-                label="New Password"
+                label="كلمة المرور الجديدة"
                 type={showPwd ? 'text' : 'password'}
-                placeholder="Min. 8 characters"
+                placeholder="8 أحرف على الأقل"
                 value={newPwd}
                 onChange={(e) => setNewPwd(e.target.value)}
               />
@@ -286,7 +286,7 @@ export default function AdminUsersPage() {
             </div>
             <div className="flex gap-3 pt-1">
               <Button variant="secondary" className="flex-1" onClick={() => setResetTarget(null)}>
-                Cancel
+                إلغاء
               </Button>
               <Button
                 className="flex-1"
@@ -295,7 +295,7 @@ export default function AdminUsersPage() {
                 disabled={newPwd.length < 8}
                 onClick={handleResetPassword}
               >
-                Reset Password
+                إعادة التعيين
               </Button>
             </div>
           </div>
@@ -307,7 +307,7 @@ export default function AdminUsersPage() {
         <Modal
           open
           onClose={() => setDetailUser(null)}
-          title="User Details"
+          title="تفاصيل المستخدم"
           size="sm"
         >
           <div className="space-y-3">
@@ -322,7 +322,7 @@ export default function AdminUsersPage() {
                 <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{detailUser.email}</p>
               </div>
               <Badge
-                label={detailUser.is_active ? 'Active' : 'Disabled'}
+                label={detailUser.is_active ? 'نشط' : 'معطل'}
                 variant={detailUser.is_active ? 'success' : 'danger'}
                 dot
                 className="ml-auto"
@@ -330,11 +330,11 @@ export default function AdminUsersPage() {
             </div>
 
             {[
-              { label: 'Role',       value: ROLE_LABELS[detailUser.role]?.label || detailUser.role },
-              { label: 'Factory',    value: detailUser.factory?.name || '—' },
-              { label: 'Last Login', value: detailUser.last_login ? fmt.dateTime(detailUser.last_login) : 'Never' },
-              { label: 'Joined',     value: fmt.date(detailUser.created_at) },
-              { label: 'User ID',    value: detailUser.id },
+              { label: 'الدور',       value: ROLE_LABELS[detailUser.role]?.label || detailUser.role },
+              { label: 'المصنع',    value: detailUser.factory?.name || '—' },
+              { label: 'آخر تسجيل دخول', value: detailUser.last_login ? fmt.dateTime(detailUser.last_login) : 'أبدًا' },
+              { label: 'تاريخ الانضمام',     value: fmt.date(detailUser.created_at) },
+              { label: 'معرف المستخدم',    value: detailUser.id },
             ].map(({ label, value }) => (
               <div key={label} className="flex items-start justify-between gap-4 text-sm">
                 <span style={{ color: 'var(--text-tertiary)' }}>{label}</span>
@@ -350,7 +350,7 @@ export default function AdminUsersPage() {
                 icon={detailUser.is_active ? ShieldOff : ShieldCheck}
                 onClick={() => { setDetailUser(null); setToggleTarget(detailUser); }}
               >
-                {detailUser.is_active ? 'Disable' : 'Enable'}
+                {detailUser.is_active ? 'تعطيل' : 'تفعيل'}
               </Button>
               <Button
                 variant="outline"
@@ -359,7 +359,7 @@ export default function AdminUsersPage() {
                 icon={KeyRound}
                 onClick={() => { setDetailUser(null); setResetTarget(detailUser); setNewPwd(''); setShowPwd(false); }}
               >
-                Reset Password
+                إعادة تعيين كلمة المرور
               </Button>
             </div>
           </div>

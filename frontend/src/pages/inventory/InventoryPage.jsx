@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Plus, Pencil, Trash2, ArrowUpDown, Package, History, AlertTriangle, Boxes, DollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DataTable from '../../design-system/components/organisms/DataTable';
@@ -17,13 +17,21 @@ import { fmt, errMsg } from '../../utils/formatters';
 import { UNIT_TYPES } from '../../utils/constants';
 import PurchaseModal from './PurchaseModal';
 
-const EMPTY = { name: '', unit_type: 'kg', quantity: '', cost_per_unit: '', quality: '', reorder_level: '' };
+const EMPTY = {
+  name: '',
+  unit_type: 'kg',
+  quality: '',
+  supplier: '',
+  notes: '',
+  reorder_level: '',
+};
 
 export default function InventoryPage() {
   const { t } = useTranslation();
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState('');
+  const [filterUnit, setFilterUnit] = useState('');
   const [modal, setModal]         = useState(null); // null | 'create' | 'edit' | 'adjust'
   const [selected, setSelected]   = useState(null);
   const [form, setForm]           = useState(EMPTY);
@@ -38,15 +46,30 @@ export default function InventoryPage() {
 
   const load = async () => {
     setLoading(true);
-    try { setMaterials(await getMaterials({ search })); }
-    catch (e) { toast.error(errMsg(e)); }
-    finally { setLoading(false); }
+    try {
+      setMaterials(await getMaterials({ search, unit_type: filterUnit || undefined }));
+    } catch (e) {
+      toast.error(errMsg(e), { id: 'inventory-load' });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { load(); }, [search]);
+  useEffect(() => { load(); }, [search, filterUnit]);
 
   const openCreate = () => { setForm(EMPTY); setSelected(null); setModal('create'); };
-  const openEdit   = (m) => { setForm({ ...m, quantity: m.quantity, cost_per_unit: m.cost_per_unit, reorder_level: m.reorder_level ?? '' }); setSelected(m); setModal('edit'); };
+  const openEdit   = (m) => {
+    setForm({
+      ...m,
+      quantity: m.quantity,
+      cost_per_unit: m.cost_per_unit,
+      reorder_level: m.reorder_level ?? '',
+      supplier: m.supplier ?? '',
+      notes: m.notes ?? '',
+    });
+    setSelected(m);
+    setModal('edit');
+  };
   const openAdjust = (m) => { setSelected(m); setAdjustForm({ delta: '', operation: 'add' }); setModal('adjust'); };
   const closeModal = () => { setModal(null); setSelected(null); };
 
@@ -66,7 +89,17 @@ export default function InventoryPage() {
         await updateMaterial(selected.id, form);
         toast.success('Material updated.');
       } else {
-        await createMaterial(form);
+        const payload = {
+          name: form.name?.trim(),
+          unit_type: form.unit_type,
+          quality: form.quality?.trim() || null,
+          supplier: form.supplier?.trim() || null,
+          notes: form.notes?.trim() || null,
+          reorder_level: form.reorder_level === '' ? null : Number(form.reorder_level),
+          quantity: 0,
+          cost_per_unit: 0,
+        };
+        await createMaterial(payload);
         toast.success('Material added.');
       }
       closeModal();
@@ -111,6 +144,24 @@ export default function InventoryPage() {
     0
   );
 
+  /** Sum quantities per unit_type — لا يُجمَع كيلو مع كرتون في رقم واحد. */
+  const quantityByUnit = useMemo(() => {
+    const map = new Map();
+    for (const m of materials) {
+      const u = String(m.unit_type || 'unit').trim() || 'unit';
+      map.set(u, (map.get(u) || 0) + parseFloat(m.quantity || 0));
+    }
+    const orderIdx = new Map(UNIT_TYPES.map((u, i) => [u, i]));
+    return [...map.entries()]
+      .sort(([a], [b]) => {
+        const ia = orderIdx.has(a) ? orderIdx.get(a) : 999;
+        const ib = orderIdx.has(b) ? orderIdx.get(b) : 999;
+        if (ia !== ib) return ia - ib;
+        return a.localeCompare(b);
+      })
+      .map(([unit, total]) => ({ unit, total }));
+  }, [materials]);
+
   const columns = [
     { key: 'name',          label: t('pages.inventory.material'),  sortable: true },
     { key: 'unit_type',     label: t('pages.inventory.unit'),      render: (r) => <Badge label={r.unit_type} variant="primary" size="sm" /> },
@@ -145,7 +196,9 @@ export default function InventoryPage() {
         </span>
       ),
     },
+    { key: 'supplier',      label: t('pages.inventory.supplierLabel'), render: (r) => r.supplier || '—' },
     { key: 'quality',       label: t('pages.inventory.quality'),   render: (r) => r.quality ? <Badge label={r.quality} variant="neutral" size="sm" /> : '—' },
+    { key: 'createdAt',     label: t('pages.inventory.addedDate'), sortable: true, render: (r) => r.createdAt ? fmt.date(r.createdAt) : '—' },
     { key: 'actions',       label: '', width: 180, render: (r) => (
       <div className="flex items-center gap-1">
         <Button variant="ghost" size="sm" icon={Package}    onClick={() => setPurchaseFor(r)} title={t('pages.inventory.recordPurchase')} />
@@ -169,13 +222,42 @@ export default function InventoryPage() {
 
       {/* Stats summary */}
       {!loading && materials.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             label={t('pages.inventory.totalMaterials')}
             value={materials.length}
             icon={Boxes}
             colorClass="bg-primary-100 text-primary-600 dark:bg-primary-950/60 dark:text-primary-400"
           />
+          <div className="card p-5 flex items-start gap-4">
+            <div className="p-2.5 rounded-xl shrink-0 bg-indigo-100 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
+              <Package size={18} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium truncate" style={{ color: 'var(--text-tertiary)' }}>
+                {t('pages.inventory.totalQuantity')}
+              </p>
+              <p className="text-2xs mt-0.5 leading-snug" style={{ color: 'var(--text-tertiary)' }}>
+                {t('pages.inventory.totalQuantitySubtitle')}
+              </p>
+              <div className="mt-3 space-y-2">
+                {quantityByUnit.map(({ unit, total }) => (
+                  <div
+                    key={unit}
+                    className="flex justify-between items-baseline gap-3 border-b last:border-0 pb-2 last:pb-0"
+                    style={{ borderColor: 'var(--border-default)' }}
+                  >
+                    <span className="text-sm font-medium shrink-0" style={{ color: 'var(--text-secondary)' }}>
+                      {unit}
+                    </span>
+                    <span className="text-lg font-bold tabular-nums text-end" style={{ color: 'var(--text-primary)' }}>
+                      {fmt.number(total, 2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
           <StatCard
             label={t('pages.inventory.totalValue')}
             value={fmt.currency(totalInventoryValue)}
@@ -228,39 +310,40 @@ export default function InventoryPage() {
         </div>
       )}
 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <Input
+          placeholder={t('pages.inventory.searchByMaterialOrSupplier')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <Select value={filterUnit} onChange={(e) => setFilterUnit(e.target.value)}>
+          <option value="">{t('pages.inventory.allUnits')}</option>
+          {UNIT_TYPES.map((u) => <option key={u} value={u}>{u}</option>)}
+        </Select>
+        <Input value={t('pages.inventory.itemsCount', { count: materials.length })} readOnly />
+      </div>
+
       <DataTable
         columns={columns}
         data={materials}
         loading={loading}
         emptyMessage={t('pages.inventory.noMaterials')}
-        searchable
-        searchPlaceholder={t('pages.inventory.searchPlaceholder')}
         striped
       />
 
       {/* Create / Edit Modal */}
       <Modal open={modal === 'create' || modal === 'edit'} onClose={closeModal} title={modal === 'edit' ? t('pages.inventory.editMaterial') : t('pages.inventory.addMaterial')}>
         <div className="space-y-4">
-          <Input label={t('common.name') + ' *'} placeholder="e.g. Steel Rod" value={form.name} onChange={field('name')} />
+          <Input label={t('common.name') + ' *'} placeholder={t('pages.inventory.materialPlaceholder')} value={form.name} onChange={field('name')} />
           <div className="grid grid-cols-2 gap-4">
             <Select label={t('pages.inventory.unitType') + ' *'} value={form.unit_type} onChange={field('unit_type')}>
               {UNIT_TYPES.map((u) => <option key={u}>{u}</option>)}
             </Select>
-            <Input label={t('pages.inventory.quality')} placeholder="e.g. Grade A" value={form.quality} onChange={field('quality')} />
+            <Input label={t('pages.inventory.quality')} placeholder={t('pages.inventory.qualityPlaceholder')} value={form.quality} onChange={field('quality')} />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Input
-              label={t('pages.inventory.startingQuantity')}
-              type="number" min="0" placeholder="0"
-              value={form.quantity} onChange={field('quantity')}
-              helperText={t('pages.inventory.startingQuantityHint')}
-            />
-            <Input
-              label={t('pages.inventory.costPerBaseUnit')}
-              type="number" min="0" step="0.01" placeholder="0.00"
-              value={form.cost_per_unit} onChange={field('cost_per_unit')}
-              helperText={t('pages.inventory.costHint')}
-            />
+            <Input label={t('pages.inventory.supplier')} placeholder={t('pages.inventory.supplierPlaceholder')} value={form.supplier} onChange={field('supplier')} />
+            <Input label={t('pages.inventory.note')} placeholder={t('pages.inventory.notesPlaceholder')} value={form.notes} onChange={field('notes')} />
           </div>
           <Input label={t('pages.inventory.reorderLevel')} type="number" min="0" placeholder="0" value={form.reorder_level} onChange={field('reorder_level')} />
           <div className="flex gap-3 pt-2">
@@ -275,16 +358,16 @@ export default function InventoryPage() {
       {/* Adjust Quantity Modal */}
       <Modal open={modal === 'adjust'} onClose={closeModal} title={`Adjust: ${selected?.name}`} size="sm">
         <div className="space-y-4">
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Current quantity: <strong>{fmt.number(selected?.quantity, 2)} {selected?.unit_type}</strong></p>
-          <Select label="Operation" value={adjustForm.operation} onChange={(e) => setAdjustForm((f) => ({ ...f, operation: e.target.value }))}>
-            <option value="add">Add stock</option>
-            <option value="subtract">Remove stock</option>
-            <option value="set">Set exact quantity</option>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t('pages.inventory.currentQuantity')}: <strong>{fmt.number(selected?.quantity, 2)} {selected?.unit_type}</strong></p>
+          <Select label={t('pages.inventory.operation')} value={adjustForm.operation} onChange={(e) => setAdjustForm((f) => ({ ...f, operation: e.target.value }))}>
+            <option value="add">{t('pages.inventory.addStock')}</option>
+            <option value="subtract">{t('pages.inventory.removeStock')}</option>
+            <option value="set">{t('pages.inventory.setExactQuantity')}</option>
           </Select>
-          <Input label="Amount" type="number" min="0.001" step="0.001" placeholder="0.00" value={adjustForm.delta} onChange={(e) => setAdjustForm((f) => ({ ...f, delta: e.target.value }))} />
+          <Input label={t('pages.inventory.amount')} type="number" min="0.001" step="0.001" placeholder="0.00" value={adjustForm.delta} onChange={(e) => setAdjustForm((f) => ({ ...f, delta: e.target.value }))} />
           <div className="flex gap-3 pt-2">
-            <Button variant="secondary" className="flex-1" onClick={closeModal}>Cancel</Button>
-            <Button className="flex-1" loading={saving} onClick={handleAdjust}>Apply</Button>
+            <Button variant="secondary" className="flex-1" onClick={closeModal}>{t('common.cancel')}</Button>
+            <Button className="flex-1" loading={saving} onClick={handleAdjust}>{t('pages.inventory.apply')}</Button>
           </div>
         </div>
       </Modal>
@@ -341,9 +424,9 @@ export default function InventoryPage() {
                   {(p.levels || []).map((l) => `${l.quantity} ${l.label}`).join(' × ')}
                 </p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                  <span>Unit cost: <strong style={{ color: 'var(--text-primary)' }}>{fmt.currency(p.purchase_unit_cost)}</strong></span>
-                  <span>After-avg: <strong style={{ color: 'var(--text-primary)' }}>{fmt.currency(p.resulting_cost_per_base_unit)}</strong></span>
-                  {p.supplier && <span>Supplier: <strong style={{ color: 'var(--text-primary)' }}>{p.supplier}</strong></span>}
+                  <span>{t('pages.inventory.unitCost')}: <strong style={{ color: 'var(--text-primary)' }}>{fmt.currency(p.purchase_unit_cost)}</strong></span>
+                  <span>{t('pages.inventory.afterAvg')}: <strong style={{ color: 'var(--text-primary)' }}>{fmt.currency(p.resulting_cost_per_base_unit)}</strong></span>
+                  {p.supplier && <span>{t('pages.inventory.supplier')}: <strong style={{ color: 'var(--text-primary)' }}>{p.supplier}</strong></span>}
                 </div>
                 {p.note && (
                   <p className="text-xs mt-1 italic" style={{ color: 'var(--text-tertiary)' }}>“{p.note}”</p>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تقرير المشروع — نظام إدارة المصانع</title>
+  <style>
+    @page { size: A4; margin: 18mm; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+      line-height: 1.55;
+      color: #1a1a1a;
+      font-size: 11pt;
+      max-width: 190mm;
+      margin: 0 auto;
+      padding: 8px;
+    }
+    h1 {
+      font-size: 22pt;
+      border-bottom: 3px solid #2563eb;
+      padding-bottom: 10px;
+      margin: 0 0 16px 0;
+    }
+    .meta { color: #64748b; font-size: 10pt; margin-bottom: 20px; }
+    h2 {
+      font-size: 15pt;
+      color: #1e40af;
+      margin: 1.4em 0 0.6em 0;
+      page-break-after: avoid;
+    }
+    h3 { font-size: 12pt; color: #334155; margin: 1em 0 0.4em 0; }
+    p { margin: 0.5em 0; }
+    ul { padding-right: 1.3em; margin: 0.4em 0; }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 12px 0;
+      font-size: 10pt;
+      page-break-inside: avoid;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      text-align: right;
+    }
+    th { background: #f1f5f9; font-weight: 600; }
+    code {
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 9pt;
+      direction: ltr;
+      unicode-bidi: embed;
+      display: inline-block;
+    }
+    pre {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 9pt;
+      overflow-wrap: anywhere;
+      direction: ltr;
+      text-align: left;
+    }
+    .break { page-break-before: always; }
+    .footer-note { margin-top: 2em; font-size: 9pt; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 12px; }
+  </style>
+</head>
+<body>
+
+<h1>تقرير المشروع — نظام إدارة المصانع</h1>
+<p class="meta"><strong>المشروع:</strong> factory-management-system · <strong>الإصدار:</strong> 1.0.0 · <strong>التاريخ:</strong> مايو 2026</p>
+
+<h2>1. ملخص تنفيذي</h2>
+<p>نظام <strong>ERP لإدارة المصانع</strong> يوفّر واجهة ويب مع واجهة برمجة تطبيقات REST مبنية على Node.js وPostgreSQL. التطبيق متعدد المصانع (عزل البيانات عبر <code>factory_id</code>) مع مستوى إداري للمنصة لإدارة المصانع والاشتراكات.</p>
+
+<h2>2. التقنيات</h2>
+<table>
+  <thead><tr><th>الطبقة</th><th>التقنية</th></tr></thead>
+  <tbody>
+    <tr><td>الخادم</td><td>Node.js، Express 4، Sequelize 6، PostgreSQL</td></tr>
+    <tr><td>الأمان</td><td>JWT، bcrypt، Helmet، CORS، express-validator</td></tr>
+    <tr><td>الواجهة</td><td>React 18، Vite 5، React Router 6، Tailwind CSS</td></tr>
+    <tr><td>الحالة</td><td>Zustand (تخزين الجلسة محلياً)</td></tr>
+    <tr><td>الترجمة</td><td>i18next (عربي / إنجليزي)</td></tr>
+    <tr><td>الرسوم</td><td>Recharts</td></tr>
+    <tr><td>التصدير</td><td>jsPDF، html2canvas (حسب الصفحات)</td></tr>
+    <tr><td>التطوير</td><td>nodemon، concurrently — <code>npm run dev:all</code></td></tr>
+  </tbody>
+</table>
+
+<h2>3. هيكل المستودع</h2>
+<ul>
+  <li><strong>src/</strong> — الخلفية: server، app، controllers، services، models، routes، middleware، validations، config</li>
+  <li><strong>frontend/src/</strong> — الواجهة: pages، services، router، store، i18n، Design System</li>
+</ul>
+<p><strong>تشغيل التطوير:</strong> من جذر المشروع <code>npm run dev:all</code> (API غالباً على المنفذ 3000، Vite على 5173).</p>
+
+<h2>4. الوحدات الوظيفية</h2>
+<h3>4.1 المصادقة والمستخدمون</h3>
+<p>تسجيل الدخول بالبريد وكلمة المرور؛ JWT؛ أدوار مصنعية (صاحب مصنع، موارد بشرية، مخزون، إنتاج، مبيعات)؛ إدارة المستخدمين وحدود الاشتراك.</p>
+<h3>4.2 لوحة الإدارة (Admin)</h3>
+<p>إدارة المصانع والاشتراكات والمستخدمين على مستوى المنصة.</p>
+<h3>4.3 المخزون والمشتريات</h3>
+<p>مواد خام، شراء متعدد المستويات، متوسط تكلفة مرجح، سجل مشتريات، ملخص كميات حسب نوع الوحدة.</p>
+<h3>4.4 المنتجات والإنتاج</h3>
+<p>منتجات، وصفات، دفعات إنتاج مع تكاليف.</p>
+<h3>4.5 المبيعات</h3>
+<p>عملاء، طلبات، بنود الطلبات.</p>
+<h3>4.6 الموارد البشرية</h3>
+<p>أقسام، موظفون، حضور، قفل فترات، تقارير رواتب.</p>
+<h3>4.7 المالية والمصاريف التشغيلية</h3>
+<p>تقارير مالية، رأس مال، قائمة مالية؛ مصاريف تشغيلية وميزانيات.</p>
+<h3>4.8 الكاش فان</h3>
+<p>مركبات، تحميل وتنزيل، مخزون ميداني، مبيعات، مدفوعات، تسوية وجرد.</p>
+<h3>4.9 التقارير</h3>
+<p>تقارير مجمّعة للمخزون والإنتاج والمبيعات والربحية والموارد البشرية عبر <code>/reports</code>.</p>
+
+<div class="break"></div>
+
+<h2>5. واجهة البرمجة (API)</h2>
+<p>المسارات تحت <code>/api/v1</code> حسب إعداد التطبيق.</p>
+<table>
+  <thead><tr><th>المسار</th><th>الغرض</th></tr></thead>
+  <tbody>
+    <tr><td><code>/health</code></td><td>صحة الخدمة</td></tr>
+    <tr><td><code>/auth</code></td><td>المصادقة والملف الشخصي</td></tr>
+    <tr><td><code>/admin</code></td><td>إدارة المنصة والمصانع</td></tr>
+    <tr><td><code>/users</code></td><td>مستخدمو المصنع</td></tr>
+    <tr><td><code>/inventory</code></td><td>المواد والمشتريات</td></tr>
+    <tr><td><code>/products</code></td><td>المنتجات</td></tr>
+    <tr><td><code>/production</code></td><td>الوصفات والدفعات</td></tr>
+    <tr><td><code>/sales</code></td><td>العملاء والطلبات</td></tr>
+    <tr><td><code>/reports</code></td><td>التقارير</td></tr>
+    <tr><td><code>/hr</code></td><td>الموارد البشرية</td></tr>
+    <tr><td><code>/cash-van</code></td><td>الكاش فان</td></tr>
+    <tr><td><code>/operational-expenses</code></td><td>المصاريف التشغيلية</td></tr>
+  </tbody>
+</table>
+
+<h2>6. الأمان والصلاحيات</h2>
+<p>JWT؛ التحكم بالأدوار؛ اشتراك المصنع؛ تشفير كلمات المرور؛ عدم إرجاع الأسرار في الاستجابات.</p>
+
+<h2>7. قاعدة البيانات</h2>
+<p>PostgreSQL عبر Sequelize؛ أوامر مساعدة: <code>db:migrate</code>، <code>db:seed</code>، <code>db:reset</code>.</p>
+
+<h2>8. الواجهة الأمامية</h2>
+<p>توجيه حسب الدور؛ دعم الوضع الداكن؛ ترجمة؛ إعدادات الحساب (بريد، كلمة مرور، اسم المصنع لصاحب المصنع).</p>
+
+<h2>9. خلاصة</h2>
+<p>منصّة متكاملة لإدارة العمليات الصناعية والميدانية مع فصل طبقي واضح. للإنتاج: ضبط <code>.env</code>، النسخ الاحتياطي، ومراقبة الأداء.</p>
+
+<h2>ملحق: أوامر سريعة</h2>
+<pre>npm run dev          # API فقط
+npm run dev:all      # API + واجهة Vite
+npm start            # تشغيل Node إنتاج
+cd frontend && npm run build</pre>
+<p class="footer-note">تم إنشاء هذا الملف آلياً ضمن مستودع المشروع. للتحديث، عدّل <code>docs/report-print.html</code> أو <code>docs/PROJECT_REPORT.md</code> ثم أعد تشغيل سكربت التصدير إلى PDF.</p>
+
+</body>
+</html>

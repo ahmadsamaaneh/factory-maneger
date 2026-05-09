@@ -1,4 +1,5 @@
 const { DataTypes } = require('sequelize');
+const validator = require('validator');
 
 module.exports = (sequelize) => {
   const Customer = sequelize.define(
@@ -16,7 +17,14 @@ module.exports = (sequelize) => {
       email: {
         type: DataTypes.STRING(255),
         allowNull: true,
-        validate: { isEmail: true },
+        validate: {
+          isEmailIfPresent(value) {
+            if (value == null || String(value).trim() === '') return;
+            if (!validator.isEmail(String(value))) {
+              throw new Error('Must be a valid email address');
+            }
+          },
+        },
       },
       phone: {
         type: DataTypes.STRING(30),

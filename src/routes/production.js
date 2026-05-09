@@ -5,7 +5,7 @@ const authorize = require('../middleware/authorize');
 const tenantScope = require('../middleware/tenantMiddleware');
 const checkSubscription = require('../middleware/subscriptionMiddleware');
 const validate = require('../middleware/validate');
-const { createRecipeRules, runBatchRules } = require('../validations/productionValidation');
+const { createRecipeRules, runBatchRules, updateBatchRules } = require('../validations/productionValidation');
 
 const MANAGE = ['admin', 'factory_owner', 'production_manager'];
 
@@ -30,5 +30,7 @@ router.post('/batches', authorize(...MANAGE), runBatchRules, validate, productio
 router.get('/batches', authorize(...MANAGE), productionController.listBatches);
 
 router.get('/batches/:id', authorize(...MANAGE), productionController.getBatchById);
+
+router.patch('/batches/:id', authorize(...MANAGE), updateBatchRules, validate, productionController.updateBatch);
 
 module.exports = router;

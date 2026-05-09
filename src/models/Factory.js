@@ -35,6 +35,12 @@ module.exports = (sequelize) => {
         defaultValue: 10,
         comment: 'Maximum number of users allowed in this factory',
       },
+      capital_amount: {
+        type: DataTypes.DECIMAL(14, 4),
+        allowNull: false,
+        defaultValue: 0,
+        comment: 'Factory registered capital amount',
+      },
       is_active: {
         type: DataTypes.BOOLEAN,
         defaultValue: true,

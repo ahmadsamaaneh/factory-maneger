@@ -53,6 +53,21 @@ module.exports = (sequelize) => {
         type: DataTypes.ENUM(...STATUS),
         defaultValue: 'completed',
       },
+      /** يوم الجدولة على المخطط الزمني (YYYY-MM-DD) */
+      schedule_date: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+      },
+      /** بداية الدفعة على مدار 24 ساعة (HH:mm) */
+      start_time: {
+        type: DataTypes.STRING(8),
+        allowNull: true,
+      },
+      /** نهاية الدفعة (HH:mm) */
+      end_time: {
+        type: DataTypes.STRING(8),
+        allowNull: true,
+      },
       notes: {
         type: DataTypes.TEXT,
         allowNull: true,

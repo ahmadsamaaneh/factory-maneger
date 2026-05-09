@@ -15,32 +15,32 @@ import { fmt, errMsg } from '../../utils/formatters';
  */
 const PRESETS = {
   single: {
-    name: 'Single Unit',
-    hint: 'You buy directly in the base unit (no conversion).',
+    name: 'وحدة مفردة',
+    hint: 'الشراء مباشرة بالوحدة الأساسية (بدون تحويل).',
     build: (baseUnit) => [{ label: baseUnit, quantity: '' }],
   },
   weight: {
-    name: 'Sack / Container → Weight',
-    hint: 'E.g. buy 10 sacks, each weighing 25 kg.',
+    name: 'شوال / حاوية → وزن',
+    hint: 'مثال: شراء 10 شوالات، كل شوال 25 كغ.',
     build: (baseUnit) => [
-      { label: 'Sacks',                 quantity: '' },
+      { label: 'شوالات',                 quantity: '' },
       { label: `${baseUnit} per sack`,  quantity: '' },
     ],
   },
   packaging: {
-    name: 'Master Pack → Bundle → Carton',
-    hint: 'E.g. buy 5 master packs, 10 bundles each, 12 cartons per bundle.',
+    name: 'عبوة رئيسية → ربطة → كرتون',
+    hint: 'مثال: 5 عبوات رئيسية، 10 ربطات لكل عبوة، 12 كرتون لكل ربطة.',
     build: () => [
-      { label: 'Master Packs',          quantity: '' },
-      { label: 'Bundles per Master',    quantity: '' },
-      { label: 'Cartons per Bundle',    quantity: '' },
+      { label: 'عبوات رئيسية',          quantity: '' },
+      { label: 'ربطات لكل عبوة',    quantity: '' },
+      { label: 'كراتين لكل ربطة',    quantity: '' },
     ],
   },
   custom: {
-    name: 'Custom Levels',
-    hint: 'Add as many conversion levels as you need.',
+    name: 'مستويات مخصصة',
+    hint: 'أضف عدد المستويات الذي تحتاجه.',
     build: (baseUnit) => [
-      { label: 'Outer Unit',            quantity: '' },
+      { label: 'وحدة خارجية',            quantity: '' },
       { label: `${baseUnit} per outer`, quantity: '' },
     ],
   },
@@ -81,7 +81,16 @@ export default function PurchaseModal({ open, material, onClose, onSuccess }) {
     const newQty  = eQty + totalBase;
     const newCost = newQty > 0 ? (eQty * eCost + cost) / newQty : unitCost;
 
-    return { totalBase, unitCost, newQty, newCost, eQty, eCost };
+    return {
+      /** كمية هذه الصفقة بالوحدة الأساسية فقط (بدون مخزون سابق). */
+      purchaseBaseQty: totalBase,
+      unitCost,
+      /** مخزون بعد الدمج = سابق + شراء. */
+      newQty,
+      newCost,
+      eQty,
+      eCost,
+    };
   }, [levels, totalCost, material]);
 
   // ─── Level manipulation ─────────────────────────────────────────
@@ -96,8 +105,8 @@ export default function PurchaseModal({ open, material, onClose, onSuccess }) {
 
   // ─── Submit ─────────────────────────────────────────────────────
   const handleSubmit = async () => {
-    if (!preview) return toast.error('Fill all quantities and total cost with valid numbers.');
-    if (levels.some((l) => !l.label.trim())) return toast.error('Each level needs a label.');
+    if (!preview) return toast.error('املأ كل الكميات وإجمالي التكلفة بأرقام صحيحة.');
+    if (levels.some((l) => !l.label.trim())) return toast.error('كل مستوى يحتاج اسمًا.');
 
     setSaving(true);
     try {
@@ -107,7 +116,7 @@ export default function PurchaseModal({ open, material, onClose, onSuccess }) {
         supplier: supplier.trim() || null,
         note: note.trim() || null,
       });
-      toast.success(`Purchase recorded. New stock: ${fmt.number(preview.newQty, 2)} ${baseUnit}.`);
+      toast.success(`تم تسجيل الشراء. المخزون الجديد: ${fmt.number(preview.newQty, 2)} ${baseUnit}.`);
       onSuccess?.();
       resetForm('weight');
       onClose();
@@ -127,7 +136,7 @@ export default function PurchaseModal({ open, material, onClose, onSuccess }) {
       title={
         <span className="flex items-center gap-2">
           <Package size={18} />
-          Record Purchase — {material.name}
+          تسجيل شراء — {material.name}
         </span>
       }
       size="lg"
@@ -139,13 +148,13 @@ export default function PurchaseModal({ open, material, onClose, onSuccess }) {
           style={{ backgroundColor: 'var(--bg-subtle)' }}
         >
           <div>
-            <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Current Stock</p>
+            <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>المخزون الحالي</p>
             <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>
               {fmt.number(material.quantity, 2)} {baseUnit}
             </p>
           </div>
           <div>
-            <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Current Cost / {baseUnit}</p>
+            <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>التكلفة الحالية / {baseUnit}</p>
             <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>
               {fmt.currency(material.cost_per_unit)}
             </p>
@@ -155,7 +164,7 @@ export default function PurchaseModal({ open, material, onClose, onSuccess }) {
         {/* ─── Preset picker ─── */}
         <div>
           <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-            Purchase Structure
+            هيكل الشراء
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {Object.entries(PRESETS).map(([key, cfg]) => (
@@ -183,10 +192,10 @@ export default function PurchaseModal({ open, material, onClose, onSuccess }) {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-              Conversion Levels
+              مستويات التحويل
             </label>
             <Button variant="ghost" size="sm" icon={Plus} onClick={addLevel}>
-              Add Level
+              إضافة مستوى
             </Button>
           </div>
 
@@ -194,15 +203,15 @@ export default function PurchaseModal({ open, material, onClose, onSuccess }) {
             <div key={i} className="flex gap-2 items-end">
               <div className="flex-1">
                 <Input
-                  label={i === 0 ? 'Unit Label' : undefined}
-                  placeholder={i === 0 ? 'e.g. Sacks' : `Per ${levels[i - 1]?.label || 'parent'} — e.g. ${baseUnit}`}
+                  label={i === 0 ? 'اسم الوحدة' : undefined}
+                  placeholder={i === 0 ? 'مثال: شوالات' : `لكل ${levels[i - 1]?.label || 'وحدة أب'} — مثال: ${baseUnit}`}
                   value={lvl.label}
                   onChange={(e) => updateLevel(i, { label: e.target.value })}
                 />
               </div>
               <div className="w-32">
                 <Input
-                  label={i === 0 ? 'Quantity' : undefined}
+                  label={i === 0 ? 'الكمية' : undefined}
                   type="number"
                   min="0"
                   step="0.001"
@@ -226,7 +235,7 @@ export default function PurchaseModal({ open, material, onClose, onSuccess }) {
           {levels.length > 1 && (
             <p className="text-xs font-mono mt-1" style={{ color: 'var(--text-tertiary)' }}>
               {levels.map((l, i) => `${l.quantity || '?'} ${l.label || '?'}`).join(' × ')}
-              {' '}= {preview ? fmt.number(preview.totalBase, 2) : '?'} {baseUnit}
+              {' '}= {preview ? fmt.number(preview.purchaseBaseQty, 2) : '?'} {baseUnit}
             </p>
           )}
         </div>
@@ -234,7 +243,7 @@ export default function PurchaseModal({ open, material, onClose, onSuccess }) {
         {/* ─── Cost inputs ─── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input
-            label="Total Cost"
+            label="إجمالي التكلفة"
             required
             type="number"
             min="0"
@@ -245,15 +254,15 @@ export default function PurchaseModal({ open, material, onClose, onSuccess }) {
             prefix={<DollarSign size={13} />}
           />
           <Input
-            label="Supplier"
-            placeholder="Optional"
+            label="المورّد"
+            placeholder="اختياري"
             value={supplier}
             onChange={(e) => setSupplier(e.target.value)}
           />
         </div>
         <Input
-          label="Note"
-          placeholder="Optional notes about this purchase…"
+          label="ملاحظة"
+          placeholder="ملاحظات اختيارية عن عملية الشراء…"
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
@@ -269,18 +278,23 @@ export default function PurchaseModal({ open, material, onClose, onSuccess }) {
           >
             <div className="flex items-center gap-2 font-semibold text-sm" style={{ color: 'var(--color-primary-700)' }}>
               <Calculator size={16} />
-              Live Calculation
+              حساب فوري
             </div>
 
             <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
               <div>
-                <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Total Base Quantity</p>
+                <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  كمية الشراء بالوحدة الأساسية
+                </p>
                 <p className="font-bold" style={{ color: 'var(--text-primary)' }}>
-                  {fmt.number(preview.totalBase, 2)} {baseUnit}
+                  {fmt.number(preview.purchaseBaseQty, 2)} {baseUnit}
+                </p>
+                <p className="text-2xs mt-1 leading-snug" style={{ color: 'var(--text-tertiary)' }}>
+                  كمية هذه الصفقة فقط؛ لا تشمل المخزون الحالي في المصنع.
                 </p>
               </div>
               <div>
-                <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Cost per {baseUnit} (this purchase)</p>
+                <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>تكلفة {baseUnit} (لهذه الشراء)</p>
                 <p className="font-bold" style={{ color: 'var(--text-primary)' }}>
                   {fmt.currency(preview.unitCost)}
                 </p>
@@ -293,15 +307,21 @@ export default function PurchaseModal({ open, material, onClose, onSuccess }) {
             >
               <div>
                 <p className="text-xs flex items-center gap-1" style={{ color: 'var(--text-tertiary)' }}>
-                  <TrendingUp size={11} /> New Total Stock
+                  <TrendingUp size={11} /> المخزون بعد الشراء
                 </p>
                 <p className="font-bold" style={{ color: 'var(--color-success-600)' }}>
                   {fmt.number(preview.newQty, 2)} {baseUnit}
                 </p>
+                {preview.eQty > 0 && (
+                  <p className="text-2xs mt-1 font-mono tabular-nums" style={{ color: 'var(--text-tertiary)' }}>
+                    {fmt.number(preview.eQty, 2)} + {fmt.number(preview.purchaseBaseQty, 2)} ={' '}
+                    {fmt.number(preview.newQty, 2)} {baseUnit}
+                  </p>
+                )}
               </div>
               <div>
                 <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                  New Weighted-Avg Cost / {baseUnit}
+                  متوسط التكلفة المرجح الجديد / {baseUnit}
                 </p>
                 <p className="font-bold" style={{ color: 'var(--color-success-600)' }}>
                   {fmt.currency(preview.newCost)}
@@ -313,7 +333,7 @@ export default function PurchaseModal({ open, material, onClose, onSuccess }) {
 
         {/* ─── Actions ─── */}
         <div className="flex gap-3 pt-1">
-          <Button variant="secondary" className="flex-1" onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" className="flex-1" onClick={onClose}>إلغاء</Button>
           <Button
             className="flex-1"
             icon={Package}
@@ -321,7 +341,7 @@ export default function PurchaseModal({ open, material, onClose, onSuccess }) {
             disabled={!preview}
             onClick={handleSubmit}
           >
-            Record Purchase
+            تسجيل الشراء
           </Button>
         </div>
       </div>

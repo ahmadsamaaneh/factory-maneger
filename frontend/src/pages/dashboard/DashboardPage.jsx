@@ -60,17 +60,17 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {data?.inventory && (
           <StatCard
-            label="Inventory Items"
+            label="عناصر المخزون"
             value={data.inventory.total_materials}
             icon={BoxesIcon}
             colorClass="bg-primary-100 text-primary-600 dark:bg-primary-950/60 dark:text-primary-400"
-            trend={`${data.inventory.low_stock_count} low stock`}
+            trend={`${data.inventory.low_stock_count} منخفض المخزون`}
             trendUp={data.inventory.low_stock_count === 0}
           />
         )}
         {data?.inventory && (
           <StatCard
-            label="Inventory Value"
+            label="قيمة المخزون"
             value={fmt.currency(data.inventory.total_inventory_value)}
             icon={TrendingUp}
             colorClass="bg-success-100 text-success-600 dark:bg-success-900/40 dark:text-success-400"
@@ -78,21 +78,21 @@ export default function DashboardPage() {
         )}
         {data?.sales && (
           <StatCard
-            label="Total Orders"
+            label="إجمالي الطلبات"
             value={data.sales.total_orders}
             icon={ShoppingCart}
             colorClass="bg-info-100 text-info-600 dark:bg-info-900/40 dark:text-info-400"
-            trend={`${fmt.currency(data.sales.total_revenue)} revenue`}
+            trend={`${fmt.currency(data.sales.total_revenue)} إيراد`}
             trendUp
           />
         )}
         {data?.production && (
           <StatCard
-            label="Production Batches"
+            label="دفعات الإنتاج"
             value={data.production.total_batches}
             icon={Factory}
             colorClass="bg-warning-100 text-warning-600 dark:bg-warning-900/40 dark:text-warning-400"
-            trend={`${fmt.currency(data.production.total_cost)} cost`}
+            trend={`${fmt.currency(data.production.total_cost)} تكلفة`}
           />
         )}
       </div>
@@ -101,9 +101,9 @@ export default function DashboardPage() {
       {data?.profit && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
-            { label: 'Total Revenue', value: fmt.currency(data.profit.total_revenue), color: 'text-green-600' },
-            { label: 'Gross Profit',  value: fmt.currency(data.profit.gross_profit),  color: 'text-indigo-600' },
-            { label: 'Net Profit',    value: fmt.currency(data.profit.net_profit),     color: 'text-blue-600' },
+            { label: 'إجمالي الإيراد', value: fmt.currency(data.profit.total_revenue), color: 'text-green-600' },
+            { label: 'الربح الإجمالي',  value: fmt.currency(data.profit.gross_profit),  color: 'text-indigo-600' },
+            { label: 'صافي الربح',    value: fmt.currency(data.profit.net_profit),     color: 'text-blue-600' },
           ].map((item) => (
             <div key={item.label} className="card p-5 text-center">
               <p className="text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>{item.label}</p>
@@ -117,7 +117,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {topMaterials.length > 0 && (
           <div className="card p-5">
-            <h3 className="mb-4">Inventory Levels</h3>
+            <h3 className="mb-4">مستويات المخزون</h3>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={topMaterials} barSize={28}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -126,7 +126,7 @@ export default function DashboardPage() {
                 <Tooltip
                   contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}
                 />
-                <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} name="Quantity" />
+                <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} name="الكمية" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -134,7 +134,7 @@ export default function DashboardPage() {
 
         {salesOrders.length > 0 && (
           <div className="card p-5">
-            <h3 className="mb-4">Recent Sales</h3>
+            <h3 className="mb-4">المبيعات الأخيرة</h3>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={salesOrders}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -142,7 +142,7 @@ export default function DashboardPage() {
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip
                   contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}
-                  formatter={(v) => [fmt.currency(v), 'Amount']}
+                  formatter={(v) => [fmt.currency(v), 'القيمة']}
                 />
                 <Line type="monotone" dataKey="amount" stroke="#6366f1" strokeWidth={2} dot={{ r: 4 }} />
               </LineChart>
@@ -157,7 +157,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle size={16} className="text-amber-600" />
             <span className="text-sm font-semibold text-warning-800 dark:text-warning-200">
-              Low Stock Alert ({data.inventory.low_stock_items.length} items)
+              تنبيه انخفاض المخزون ({data.inventory.low_stock_items.length} عنصر)
             </span>
           </div>
           <div className="flex flex-wrap gap-2">

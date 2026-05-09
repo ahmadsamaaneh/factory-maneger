@@ -24,7 +24,10 @@ async function listMaterials({ search, unit_type, low_stock } = {}, factoryId) {
   if (factoryId) where.factory_id = factoryId;
 
   if (search) {
-    where.name = { [Op.iLike]: `%${search}%` };
+    where[Op.or] = [
+      { name: { [Op.iLike]: `%${search}%` } },
+      { supplier: { [Op.iLike]: `%${search}%` } },
+    ];
   }
   if (unit_type) {
     where.unit_type = unit_type;

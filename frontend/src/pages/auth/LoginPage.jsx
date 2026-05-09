@@ -107,7 +107,7 @@ export default function LoginPage() {
           <div className="mt-6 pt-5 border-t border-gray-100">
             <p className="text-xs text-gray-400 text-center mb-3">{t('auth.demoCredentials')}</p>
             <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-600 space-y-1">
-              <div className="flex justify-between"><span className="font-medium">Admin</span><span>admin@factory.com</span></div>
+              <div className="flex justify-between"><span className="font-medium">المسؤول</span><span>admin@factory.com</span></div>
               <div className="flex justify-between"><span></span><span className="text-gray-400">Admin@123456</span></div>
             </div>
           </div>

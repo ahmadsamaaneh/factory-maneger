@@ -11,6 +11,9 @@ const useAuthStore = create(
       setAuth: (user, token) =>
         set({ user, token, isAuthenticated: true }),
 
+      /** Replace current user (e.g. after profile / factory name update). Keeps token. */
+      setUser: (user) => set({ user }),
+
       logout: () =>
         set({ user: null, token: null, isAuthenticated: false }),
 

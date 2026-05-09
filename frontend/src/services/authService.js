@@ -8,3 +8,9 @@ export const getMe = () =>
 
 export const changePassword = (current_password, new_password) =>
   api.put('/auth/change-password', { current_password, new_password }).then((r) => r.data);
+
+export const updateProfileEmail = (email) =>
+  api.patch('/auth/profile', { email }).then((r) => r.data.data);
+
+export const updateMyFactoryName = (name) =>
+  api.patch('/auth/my-factory', { name }).then((r) => r.data.data);

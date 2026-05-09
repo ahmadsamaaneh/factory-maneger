@@ -1,11 +1,12 @@
-const { User } = require('../models');
+const { User, Employee } = require('../models');
 
 // Only staff roles can be created via /users endpoint
 // factory_owner is only created via /admin/factories (factory creation flow)
-const STAFF_ROLES = ['inventory_manager', 'production_manager', 'sales_manager'];
+const STAFF_ROLES = ['hr_manager', 'inventory_manager', 'production_manager', 'sales_manager'];
+const SINGLE_PER_FACTORY_ROLES = ['hr_manager', 'production_manager'];
 
 async function createUser(creatorRole, creatorId, creatorFactoryId, userData) {
-  const { role } = userData;
+  const { role, employee_id, ...rest } = userData;
 
   if (!STAFF_ROLES.includes(role)) {
     const err = new Error(
@@ -21,7 +22,7 @@ async function createUser(creatorRole, creatorId, creatorFactoryId, userData) {
     throw err;
   }
 
-  const existing = await User.findOne({ where: { email: userData.email } });
+  const existing = await User.findOne({ where: { email: rest.email } });
   if (existing) {
     const err = new Error('Email already in use.');
     err.statusCode = 409;
@@ -31,7 +32,34 @@ async function createUser(creatorRole, creatorId, creatorFactoryId, userData) {
   // Employees always inherit the creator's factory_id
   const factory_id = creatorFactoryId;
 
-  const user = await User.create({ ...userData, factory_id, created_by: creatorId });
+  if (SINGLE_PER_FACTORY_ROLES.includes(role)) {
+    const cnt = await User.count({ where: { factory_id, role } });
+    if (cnt > 0) {
+      const err = new Error(`Only one ${role} is allowed per factory.`);
+      err.statusCode = 409;
+      throw err;
+    }
+  }
+
+  let employeeToLink = null;
+  if (employee_id) {
+    employeeToLink = await Employee.findOne({ where: { id: employee_id, factory_id } });
+    if (!employeeToLink) {
+      const err = new Error('Employee not found in this factory.');
+      err.statusCode = 400;
+      throw err;
+    }
+    if (employeeToLink.user_id) {
+      const err = new Error('Employee is already linked to a user.');
+      err.statusCode = 409;
+      throw err;
+    }
+  }
+
+  const user = await User.create({ ...rest, role, factory_id, created_by: creatorId });
+  if (employeeToLink) {
+    await employeeToLink.update({ user_id: user.id });
+  }
   return user.toSafeObject();
 }
 
@@ -42,6 +70,7 @@ async function listUsers(requestingUser) {
   const users = await User.findAll({
     where,
     attributes: { exclude: ['password'] },
+    include: [{ association: 'employeeProfile', attributes: ['id', 'full_name', 'employee_code'] }],
     order: [['created_at', 'DESC']],
   });
 

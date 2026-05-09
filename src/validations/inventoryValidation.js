@@ -5,19 +5,23 @@ const UNIT_TYPES = ['kg', 'g', 'liter', 'ml', 'unit', 'carton', 'box', 'meter', 
 const createMaterialRules = [
   body('name').trim().notEmpty().withMessage('Name is required.'),
   body('unit_type').isIn(UNIT_TYPES).withMessage(`unit_type must be one of: ${UNIT_TYPES.join(', ')}.`),
-  body('quantity').optional().isFloat({ min: 0 }).withMessage('Quantity must be a non-negative number.'),
-  body('cost_per_unit').optional().isFloat({ min: 0 }).withMessage('cost_per_unit must be a non-negative number.'),
+  body('quantity').optional({ nullable: true, checkFalsy: true }).isFloat({ min: 0 }).withMessage('Quantity must be a non-negative number.'),
+  body('cost_per_unit').optional({ nullable: true, checkFalsy: true }).isFloat({ min: 0 }).withMessage('cost_per_unit must be a non-negative number.'),
   body('quality').optional().trim(),
-  body('reorder_level').optional().isFloat({ min: 0 }).withMessage('reorder_level must be a non-negative number.'),
+  body('supplier').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 200 }),
+  body('notes').optional({ nullable: true, checkFalsy: true }).trim(),
+  body('reorder_level').optional({ nullable: true, checkFalsy: true }).isFloat({ min: 0 }).withMessage('reorder_level must be a non-negative number.'),
 ];
 
 const updateMaterialRules = [
   body('name').optional().trim().notEmpty().withMessage('Name cannot be empty.'),
   body('unit_type').optional().isIn(UNIT_TYPES).withMessage(`unit_type must be one of: ${UNIT_TYPES.join(', ')}.`),
-  body('quantity').optional().isFloat({ min: 0 }).withMessage('Quantity must be a non-negative number.'),
-  body('cost_per_unit').optional().isFloat({ min: 0 }).withMessage('cost_per_unit must be a non-negative number.'),
+  body('quantity').optional({ nullable: true, checkFalsy: true }).isFloat({ min: 0 }).withMessage('Quantity must be a non-negative number.'),
+  body('cost_per_unit').optional({ nullable: true, checkFalsy: true }).isFloat({ min: 0 }).withMessage('cost_per_unit must be a non-negative number.'),
   body('quality').optional().trim(),
-  body('reorder_level').optional().isFloat({ min: 0 }).withMessage('reorder_level must be a non-negative number.'),
+  body('supplier').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 200 }),
+  body('notes').optional({ nullable: true, checkFalsy: true }).trim(),
+  body('reorder_level').optional({ nullable: true, checkFalsy: true }).isFloat({ min: 0 }).withMessage('reorder_level must be a non-negative number.'),
 ];
 
 const createPurchaseRules = [

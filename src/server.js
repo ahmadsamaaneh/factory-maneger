@@ -27,12 +27,20 @@ async function startServer() {
     );
     if (healed > 0) console.log(`🩹 Healed ${healed} wrongly-expired factor${healed === 1 ? 'y' : 'ies'}.`);
 
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
       console.log(`📋 Environment: ${process.env.NODE_ENV || 'development'}`);
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    console.error('❌ Failed to start server:', error?.message || error);
+    if (
+      String(error?.message || '').includes('ECONNREFUSED') ||
+      String(error?.message || '').includes('password authentication') ||
+      String(error?.message || '').includes('database')
+    ) {
+      console.error('\n→ غالباً PostgreSQL غير شغّال أو إعدادات DB في ملف .env خاطئة (DB_HOST / DB_PORT / DB_NAME / DB_USER / DB_PASSWORD).');
+      console.error('→ شغّل خدمة PostgreSQL ثم أعد تشغيل: npm run dev\n');
+    }
     process.exit(1);
   }
 }

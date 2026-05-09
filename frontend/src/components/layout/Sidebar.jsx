@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Package, FlaskConical, ShoppingCart, BarChart3,
-  Users, BoxesIcon, Factory, Building2, ChevronRight,
-  PanelLeftClose, PanelLeft, ShieldCheck,
+  Users, BoxesIcon, Factory, Building2, ChevronRight, Banknote,
+  PanelLeftClose, PanelLeft, ShieldCheck, UserCircle2, Truck,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import useAuthStore from '../../store/authStore';
@@ -20,10 +20,6 @@ const ADMIN_NAV = [
 
 // ── Factory-user navigation (role-filtered) ─────────────────────
 const FACTORY_NAV = [
-  {
-    key: 'dashboard', icon: LayoutDashboard, to: '/dashboard',
-    roles: [ROLES.OWNER, ROLES.INVENTORY, ROLES.PRODUCTION, ROLES.SALES],
-  },
   {
     key: 'inventory', icon: BoxesIcon, to: '/inventory',
     roles: [ROLES.OWNER, ROLES.INVENTORY, ROLES.PRODUCTION],
@@ -51,6 +47,36 @@ const FACTORY_NAV = [
   {
     key: 'reports', icon: BarChart3, to: '/reports',
     roles: [ROLES.OWNER, ROLES.INVENTORY, ROLES.PRODUCTION, ROLES.SALES],
+  },
+  {
+    key: 'finance',
+    icon: Banknote,
+    to: '/finance',
+    roles: [ROLES.OWNER, ROLES.HR, ROLES.INVENTORY, ROLES.PRODUCTION, ROLES.SALES],
+    children: [
+      { key: 'financeOverview', to: '/finance' },
+      { key: 'operationalExpenses', to: '/finance/expenses' },
+    ],
+  },
+  {
+    key: 'cashVan', icon: Truck, to: '/cash-van',
+    roles: [ROLES.OWNER, ROLES.SALES, ROLES.INVENTORY, ROLES.HR],
+    children: [
+      { key: 'cashVanDashboard', to: '/cash-van/dashboard' },
+      { key: 'cashVanLoading', to: '/cash-van/loading' },
+      { key: 'cashVanPos', to: '/cash-van/pos' },
+      { key: 'cashVanReconciliation', to: '/cash-van/reconciliation' },
+    ],
+  },
+  {
+    key: 'hr', icon: UserCircle2, to: '/hr',
+    roles: [ROLES.OWNER, ROLES.HR],
+    children: [
+      { key: 'hrOverview', to: '/hr' },
+      { key: 'hrStaff', to: '/hr/employees' },
+      { key: 'hrAttendance', to: '/hr/attendance' },
+      { key: 'hrPayroll', to: '/hr/payroll' },
+    ],
   },
   {
     key: 'users', icon: Users, to: '/users',

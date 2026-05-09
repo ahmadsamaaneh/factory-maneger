@@ -1,4 +1,13 @@
-const { sequelize, RawMaterial, Product, ProductionBatch, SalesOrder, SalesOrderItem } = require('../models');
+const {
+  sequelize,
+  RawMaterial,
+  Product,
+  ProductionBatch,
+  SalesOrder,
+  SalesOrderItem,
+  Factory,
+  EmployeeAttendance,
+} = require('../models');
 const { Op } = require('sequelize');
 
 async function inventoryReport(factoryId) {
@@ -131,4 +140,87 @@ async function profitReport({ from, to } = {}, factoryId) {
   };
 }
 
-module.exports = { inventoryReport, productionReport, salesReport, profitReport };
+async function financeReport({ from, to } = {}, factoryId) {
+  const attendanceWhere = {};
+  if (factoryId) attendanceWhere.factory_id = factoryId;
+  if (from || to) {
+    attendanceWhere.work_date = {};
+    if (from) attendanceWhere.work_date[Op.gte] = from;
+    if (to) attendanceWhere.work_date[Op.lte] = to;
+  }
+
+  const [inventory, production, sales, profit, factory] = await Promise.all([
+    inventoryReport(factoryId),
+    productionReport({ from, to }, factoryId),
+    salesReport({ from, to }, factoryId),
+    profitReport({ from, to }, factoryId),
+    factoryId ? Factory.findByPk(factoryId) : null,
+  ]);
+
+  const attendanceRows = await EmployeeAttendance.findAll({
+    where: attendanceWhere,
+    include: [{ association: 'employee', attributes: ['salary_base', 'daily_work_hours'] }],
+  });
+
+  const capitalAmount = parseFloat(factory?.capital_amount || 0);
+  const laborDailyWagesCost = attendanceRows.reduce((sum, row) => {
+    const salaryBase = parseFloat(row.employee?.salary_base || 0);
+    const dailyHours = Math.max(1, parseFloat(row.employee?.daily_work_hours || 8));
+    const perMinute = salaryBase / 30 / (dailyHours * 60);
+    const paidMinutes = Math.max(0, parseInt(row.paid_minutes || 0, 10));
+    const overtimeAmount = parseFloat(row.overtime_amount || 0);
+    return sum + paidMinutes * perMinute + overtimeAmount;
+  }, 0);
+
+  const totalCosts =
+    parseFloat(profit.total_cogs || 0) +
+    parseFloat(production.total_cost || 0) +
+    laborDailyWagesCost;
+  const adjustedNetProfit = parseFloat(profit.net_profit || 0) - laborDailyWagesCost;
+  const adjustedGrossProfit = parseFloat(profit.gross_profit || 0) - laborDailyWagesCost;
+  const adjustedRoiPercent = capitalAmount > 0 ? (adjustedNetProfit / capitalAmount) * 100 : null;
+
+  return {
+    capital_amount: capitalAmount,
+    total_revenue: parseFloat(sales.total_revenue || 0),
+    total_inventory_value: parseFloat(inventory.total_inventory_value || 0),
+    total_production_cost: parseFloat(production.total_cost || 0),
+    total_cogs: parseFloat(profit.total_cogs || 0),
+    labor_daily_wages_cost: laborDailyWagesCost,
+    total_costs: totalCosts,
+    gross_profit: adjustedGrossProfit,
+    net_profit: adjustedNetProfit,
+    roi_percent: adjustedRoiPercent,
+    capital_after_profit: capitalAmount + adjustedNetProfit,
+    period: { from: from || null, to: to || null },
+  };
+}
+
+async function updateFactoryCapital(factoryId, capitalAmount) {
+  if (!factoryId) {
+    const err = new Error('Factory context is required.');
+    err.statusCode = 403;
+    throw err;
+  }
+  const factory = await Factory.findByPk(factoryId);
+  if (!factory) {
+    const err = new Error('Factory not found.');
+    err.statusCode = 404;
+    throw err;
+  }
+  await factory.update({ capital_amount: capitalAmount });
+  return {
+    id: factory.id,
+    name: factory.name,
+    capital_amount: parseFloat(factory.capital_amount || 0),
+  };
+}
+
+module.exports = {
+  inventoryReport,
+  productionReport,
+  salesReport,
+  profitReport,
+  financeReport,
+  updateFactoryCapital,
+};

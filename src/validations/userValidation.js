@@ -1,7 +1,7 @@
 const { body } = require('express-validator');
 
 // factory_owner is intentionally excluded — owners are created only via POST /admin/factories
-const STAFF_ROLES = ['inventory_manager', 'production_manager', 'sales_manager'];
+const STAFF_ROLES = ['hr_manager', 'inventory_manager', 'production_manager', 'sales_manager'];
 
 const createUserRules = [
   body('name').trim().notEmpty().withMessage('Name is required.'),
@@ -10,6 +10,7 @@ const createUserRules = [
     .isLength({ min: 8 })
     .withMessage('Password must be at least 8 characters.'),
   body('role').isIn(STAFF_ROLES).withMessage(`Role must be one of: ${STAFF_ROLES.join(', ')}.`),
+  body('employee_id').optional({ checkFalsy: true }).isUUID().withMessage('employee_id must be a valid UUID.'),
 ];
 
 const updateUserRules = [

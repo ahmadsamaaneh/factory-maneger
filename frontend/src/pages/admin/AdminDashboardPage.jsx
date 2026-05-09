@@ -14,10 +14,10 @@ import { errMsg } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
 
 const STATUS_META = {
-  active:    { variant: 'success', label: 'Active' },
-  trial:     { variant: 'info',    label: 'Trial' },
-  expired:   { variant: 'danger',  label: 'Expired' },
-  suspended: { variant: 'warning', label: 'Suspended' },
+  active:    { variant: 'success', label: 'نشط' },
+  trial:     { variant: 'info',    label: 'تجريبي' },
+  expired:   { variant: 'danger',  label: 'منتهي' },
+  suspended: { variant: 'warning', label: 'موقوف' },
 };
 
 export default function AdminDashboardPage() {
@@ -48,16 +48,16 @@ export default function AdminDashboardPage() {
         <div>
           <h1>{t('pages.admin.dashboard')}</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
-            System overview — manage factories and subscriptions
+            نظرة عامة للنظام — إدارة المصانع والاشتراكات
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" icon={RefreshCw} onClick={load}>Refresh</Button>
+          <Button variant="outline" size="sm" icon={RefreshCw} onClick={load}>تحديث</Button>
           <Button variant="outline" icon={Users} onClick={() => navigate('/admin/users')}>
-            All Users
+            كل المستخدمين
           </Button>
           <Button icon={Building2} onClick={() => navigate('/admin/factories')}>
-            Manage Factories
+            إدارة المصانع
           </Button>
         </div>
       </div>
@@ -66,25 +66,25 @@ export default function AdminDashboardPage() {
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
-            label="Total Factories"
+            label="إجمالي المصانع"
             value={stats.total}
             icon={Building2}
             colorClass="text-primary-600 bg-primary-50 dark:bg-primary-900/30"
           />
           <StatCard
-            label="Active"
+            label="نشط"
             value={stats.active}
             icon={CheckCircle2}
             colorClass="text-success-600 bg-success-50 dark:bg-success-900/30"
           />
           <StatCard
-            label="Trial"
+            label="تجريبي"
             value={stats.trial}
             icon={Clock}
             colorClass="text-info-600 bg-info-50 dark:bg-info-900/30"
           />
           <StatCard
-            label="Expired / Suspended"
+            label="منتهي / موقوف"
             value={(stats.expired ?? 0) + (stats.suspended ?? 0)}
             icon={XCircle}
             colorClass="text-danger-600 bg-danger-50 dark:bg-danger-900/30"
@@ -100,9 +100,9 @@ export default function AdminDashboardPage() {
           onClick={() => navigate('/admin/users')}
         >
           {[
-            { label: 'Total Users',    value: stats.total_users,    icon: Users,      color: 'text-primary-600' },
-            { label: 'Active Users',   value: stats.active_users,   icon: UserCheck,  color: 'text-success-600' },
-            { label: 'Disabled Users', value: stats.disabled_users, icon: UserX,      color: 'text-danger-600' },
+            { label: 'إجمالي المستخدمين',    value: stats.total_users,    icon: Users,      color: 'text-primary-600' },
+            { label: 'المستخدمون النشطون',   value: stats.active_users,   icon: UserCheck,  color: 'text-success-600' },
+            { label: 'المستخدمون المعطلون', value: stats.disabled_users, icon: UserX,      color: 'text-danger-600' },
           ].map(({ label, value, icon: Icon, color }) => (
             <div key={label} className="flex items-center gap-3">
               <Icon size={18} className={color} />
@@ -122,7 +122,7 @@ export default function AdminDashboardPage() {
           style={{ borderColor: 'var(--border-subtle)' }}
         >
           <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-            Recent Factories
+            أحدث المصانع
           </h2>
           <Button
             variant="ghost"
@@ -131,14 +131,14 @@ export default function AdminDashboardPage() {
             iconPosition="right"
             onClick={() => navigate('/admin/factories')}
           >
-            View all
+            عرض الكل
           </Button>
         </div>
 
         <div className="divide-y" style={{ borderColor: 'var(--border-subtle)' }}>
           {factories.length === 0 && (
             <p className="px-5 py-8 text-sm text-center" style={{ color: 'var(--text-tertiary)' }}>
-              No factories yet. Create the first one.
+              لا توجد مصانع بعد. أنشئ أول مصنع.
             </p>
           )}
           {factories.map((f) => {
@@ -211,10 +211,10 @@ export default function AdminDashboardPage() {
           <AlertTriangle size={16} className="text-danger-600 mt-0.5 shrink-0" />
           <div>
             <p className="text-sm font-semibold text-danger-700">
-              {stats.expired + stats.suspended} factory subscription{stats.expired + stats.suspended > 1 ? 's' : ''} need attention
+              يوجد {stats.expired + stats.suspended} اشتراك مصنع يحتاج متابعة
             </p>
             <p className="text-xs text-danger-600 mt-0.5">
-              {stats.expired} expired · {stats.suspended} suspended — users in these factories cannot log in.
+              {stats.expired} منتهي · {stats.suspended} موقوف — مستخدمو هذه المصانع لا يستطيعون تسجيل الدخول.
             </p>
           </div>
           <Button
@@ -223,7 +223,7 @@ export default function AdminDashboardPage() {
             className="ml-auto text-danger-600 shrink-0"
             onClick={() => navigate('/admin/factories')}
           >
-            Review
+            مراجعة
           </Button>
         </div>
       )}

@@ -24,4 +24,30 @@ async function changePassword(req, res, next) {
   }
 }
 
-module.exports = { login, me, changePassword };
+async function updateProfile(req, res, next) {
+  try {
+    if (req.user.role === 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Profile email cannot be changed for the system administrator.',
+      });
+    }
+    const { email } = req.body;
+    const userPayload = await authService.updateProfileEmail(req.user.id, email);
+    res.json({ success: true, data: userPayload });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function updateMyFactory(req, res, next) {
+  try {
+    const { name } = req.body;
+    const userPayload = await authService.updateMyFactoryName(req.user.id, name);
+    res.json({ success: true, data: userPayload });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { login, me, changePassword, updateProfile, updateMyFactory };

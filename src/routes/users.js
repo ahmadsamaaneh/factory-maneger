@@ -21,13 +21,13 @@ router.post(
 
 router.get(
   '/',
-  authorize('admin', 'factory_owner'),
+  authorize('admin', 'factory_owner', 'hr_manager'),
   userController.listUsers
 );
 
 router.get(
   '/:id',
-  authorize('admin', 'factory_owner'),
+  authorize('admin', 'factory_owner', 'hr_manager'),
   userController.getUserById
 );
 
